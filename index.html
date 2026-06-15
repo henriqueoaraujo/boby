@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- =====================================================
+       CONFIGURAÇÕES BÁSICAS
+       ===================================================== -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Boby</title>
+  <meta name="description" content="Assistente minimalista para organizar tarefas pessoais e profissionais." />
+  <meta name="theme-color" content="#F2EDDF" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="src/css/styles.css" />
+</head>
+
+<body class="auth-booting auth-locked">
+  <!-- =====================================================
+       BOTÃO DE CONFIGURAÇÕES
+       ===================================================== -->
+  <button class="floating-settings-button protected-app" id="settingsButton" type="button" aria-label="Abrir configurações">
+    <img class="settings-icon" src="src/assets/icons/settings-gear.png" alt="" aria-hidden="true" />
+  </button>
+
+  <!-- =====================================================
+       MENU DROPDOWN DE CONFIGURAÇÕES
+       ===================================================== -->
+  <div class="settings-dropdown protected-app" id="settingsPanel" aria-hidden="true">
+    <div class="profile-card settings-account-summary">
+      <div class="profile-avatar" id="profileAvatar">U</div>
+      <div>
+        <strong id="authUserName">Acesso necessário</strong>
+        <p id="authUserLabel"></p>
+      </div>
+    </div>
+
+    <button class="settings-menu-button" id="profileToggle" type="button" aria-expanded="false">
+      <span>Conta</span>
+    </button>
+
+    <div class="settings-content" id="profileContent">
+      <div class="settings-content-inner">
+        <form class="profile-form" id="profileForm">
+          <label class="profile-photo-field">
+            <span>Foto de perfil</span>
+            <input class="profile-photo-input" id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp" />
+            <span class="profile-photo-button">Escolher uma foto</span>
+            <small>PNG, JPG ou WebP. A imagem será ajustada automaticamente.</small>
+          </label>
+          <label>
+            <span>Nome</span>
+            <input id="profileNameInput" type="text" autocomplete="name" maxlength="80" />
+          </label>
+          <label>
+            <span>Data de nascimento</span>
+            <input id="profileBirthDateInput" type="date" autocomplete="bday" />
+          </label>
+          <label>
+            <span>Cidade</span>
+            <input id="profileCityInput" type="text" autocomplete="address-level2" maxlength="100" placeholder="Ex.: São Paulo" />
+          </label>
+          <button class="mini-action-button profile-save-button" id="saveProfileButton" type="submit">
+            Salvar conta
+          </button>
+        </form>
+        <p class="profile-status" id="profileStatus" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <button class="settings-menu-button" id="securityToggle" type="button" aria-expanded="false">
+      <span>Segurança</span>
+    </button>
+
+    <div class="settings-content" id="securityContent">
+      <div class="settings-content-inner">
+        <div class="profile-security">
+          <strong>Trocar senha</strong>
+          <label>
+            <span>Senha atual</span>
+            <input id="profileCurrentPasswordInput" type="password" autocomplete="current-password" />
+          </label>
+          <label>
+            <span>Nova senha</span>
+            <input id="profilePasswordInput" type="password" autocomplete="new-password" />
+          </label>
+          <label>
+            <span>Confirmar nova senha</span>
+            <input id="profileConfirmPasswordInput" type="password" autocomplete="new-password" />
+          </label>
+          <button class="mini-action-button" id="updatePasswordButton" type="button">
+            Alterar senha
+          </button>
+          <button class="mini-action-button" id="sendRecoveryButton" type="button">
+            Enviar link de recuperação
+          </button>
+        </div>
+        <div class="profile-security danger-zone">
+          <strong id="deleteAccountTitle">Excluir conta</strong>
+          <p id="deleteAccountHelp">Remove permanentemente a conta, tarefas e categorias sincronizadas.</p>
+          <label>
+            <span id="deleteAccountPasswordLabel">Senha atual</span>
+            <input id="deleteAccountPasswordInput" type="password" autocomplete="current-password" />
+          </label>
+          <label>
+            <span id="deleteAccountConfirmationLabel">Digite EXCLUIR para confirmar</span>
+            <input id="deleteAccountConfirmationInput" type="text" autocomplete="off" />
+          </label>
+          <button class="mini-action-button danger-button" id="deleteAccountButton" type="button">
+            Excluir minha conta
+          </button>
+        </div>
+        <p class="profile-status" id="securityStatus" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <button class="settings-menu-button" id="appearanceToggle" type="button" aria-expanded="false">
+      <span>Aparência</span>
+    </button>
+
+    <div class="settings-content" id="appearanceContent">
+      <div class="settings-content-inner">
+        <div class="setting-row compact">
+          <strong>Dark mode</strong>
+
+          <label class="switch">
+            <input type="checkbox" id="darkModeToggle" />
+            <span></span>
+          </label>
+        </div>
+
+        <div class="setting-row compact">
+          <strong>Green mode</strong>
+
+          <label class="switch">
+            <input type="checkbox" id="greenModeToggle" />
+            <span></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <button class="settings-menu-button" id="preferencesToggle" type="button" aria-expanded="false">
+      <span>Preferências</span>
+    </button>
+
+    <div class="settings-content" id="preferencesContent">
+      <div class="settings-content-inner">
+        <label class="setting-row language-setting">
+          <div>
+            <strong>Idioma</strong>
+            <small>Altera os textos e datas do Boby.</small>
+          </div>
+          <select id="languageSelect" aria-label="Idioma da interface">
+            <option value="pt-BR">Brasileiro</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+        </label>
+
+        <div class="setting-row compact">
+          <strong>Ocultar concluídas</strong>
+
+          <label class="switch">
+            <input type="checkbox" id="hideDoneToggle" />
+            <span></span>
+          </label>
+        </div>
+
+        <div class="setting-row compact">
+          <strong>Confirmar exclusão</strong>
+
+          <label class="switch">
+            <input type="checkbox" id="confirmDeleteToggle" />
+            <span></span>
+          </label>
+        </div>
+
+        <div class="setting-row compact">
+          <div>
+            <strong>Levar pendências para hoje</strong>
+            <small>Move tarefas não concluídas de dias anteriores.</small>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="carryIncompleteToggle" />
+            <span></span>
+          </label>
+        </div>
+
+        <div class="setting-row compact">
+          <div>
+            <strong>Lembretes</strong>
+            <small id="notificationStatus">Desativados</small>
+          </div>
+
+          <button class="mini-action-button compact-button" id="enableNotificationsButton" type="button">
+            Ativar
+          </button>
+        </div>
+
+        <div class="data-management-card">
+          <strong id="dataManagementTitle">Dados e backups</strong>
+          <small id="dataManagementHelp">Exporte seus dados ou restaure um arquivo criado pelo Boby.</small>
+          <div class="data-management-actions">
+            <button class="mini-action-button" id="exportDataButton" type="button">Exportar backup</button>
+            <label class="mini-action-button import-data-button">
+              Importar backup
+              <input id="importDataInput" type="file" accept="application/json,.json" />
+            </label>
+            <button class="mini-action-button" id="restoreSnapshotButton" type="button">
+              Restaurar cópia local
+            </button>
+          </div>
+          <p class="profile-status" id="dataManagementStatus" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+
+    <button class="settings-menu-button" id="suggestionsToggle" type="button" aria-expanded="false">
+      <span>Sugestões</span>
+    </button>
+
+    <div class="settings-content" id="suggestionsContent">
+      <div class="settings-content-inner">
+        <div class="suggestion-card">
+          <p>Próximas ideias:</p>
+          <span>Comandos por voz</span>
+          <span>Compartilhamento de listas</span>
+          <span>Etiquetas inteligentes</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-divider"></div>
+
+    <button class="settings-menu-button logout-button" id="logoutButton" type="button">
+      <span>Sair</span>
+    </button>
+  </div>
+
+  <!-- =====================================================
+       CONTEÚDO PRINCIPAL
+       ===================================================== -->
+  <main class="app protected-app" id="appShell">
+    <!-- Card principal -->
+    <section class="hero-card">
+      <div class="hero-copy">
+        <div class="assistant-line" id="assistantLine">
+          <span id="greeting" class="greeting"></span>
+          <span class="typing-cursor" aria-hidden="true"></span>
+        </div>
+
+        <h2 class="headline-line">
+          <span id="headlineText">Organize seu dia com leveza.</span>
+        </h2>
+
+      </div>
+
+      <div class="progress-ring">
+        <svg class="progress-svg" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="progress-track" cx="50" cy="50" r="42"></circle>
+          <circle class="progress-value" id="progressCircle" cx="50" cy="50" r="42"></circle>
+        </svg>
+        <span id="progressPercent">0%</span>
+      </div>
+    </section>
+
+    <!-- Formulário de nova tarefa -->
+    <section class="input-card collapsed" id="inputCard">
+      <input id="taskInput" type="text" maxlength="200" placeholder="Adicionar nova atividade..." />
+
+      <div class="task-input-toolbar">
+        <select id="categoryInput" aria-label="Categoria da tarefa"></select>
+
+        <select id="priorityInput" aria-label="Prioridade da tarefa">
+          <option value="normal">Prioridade normal</option>
+          <option value="high">Prioridade alta</option>
+        </select>
+
+        <input id="dueTimeInput" type="time" aria-label="Horário opcional da tarefa" />
+
+        <input id="dueDateInput" type="date" aria-label="Data de vencimento" />
+
+        <label class="recurrence-toggle">
+          <input id="recurrenceEnabledInput" type="checkbox" />
+          <span>Repetir</span>
+        </label>
+
+        <button id="addTaskButton" type="button">Adicionar</button>
+      </div>
+
+      <div class="recurrence-options" id="recurrenceOptions" hidden>
+        <div class="recurrence-range">
+          <label>
+            <span>Começa em</span>
+            <input id="recurrenceStartPreview" type="date" disabled />
+          </label>
+          <label>
+            <span>Repetir até</span>
+            <input id="recurrenceEndDateInput" type="date" />
+          </label>
+        </div>
+
+        <fieldset>
+          <legend>Repetir nos dias</legend>
+          <div class="recurrence-presets">
+            <button type="button" data-weekday-preset="1,2,3,4,5">Seg–Sex</button>
+            <button type="button" data-weekday-preset="1,2">Seg–Ter</button>
+            <button type="button" data-weekday-preset="3,4,5">Qua–Sex</button>
+            <button type="button" data-weekday-preset="5">Só Sex</button>
+            <button type="button" data-weekday-preset="0,1,2,3,4,5,6">Todos</button>
+          </div>
+          <div class="weekday-options">
+            <label><input type="checkbox" name="recurrenceWeekday" value="1" /> Seg</label>
+            <label><input type="checkbox" name="recurrenceWeekday" value="2" /> Ter</label>
+            <label><input type="checkbox" name="recurrenceWeekday" value="3" /> Qua</label>
+            <label><input type="checkbox" name="recurrenceWeekday" value="4" /> Qui</label>
+            <label><input type="checkbox" name="recurrenceWeekday" value="5" /> Sex</label>
+            <label><input type="checkbox" name="recurrenceWeekday" value="6" /> Sáb</label>
+            <label><input type="checkbox" name="recurrenceWeekday" value="0" /> Dom</label>
+          </div>
+          <small>Nenhum dia marcado repete em todos os dias do intervalo.</small>
+        </fieldset>
+        <p class="recurrence-summary" id="recurrenceSummary"></p>
+      </div>
+    </section>
+
+    <!-- Busca. Começa recolhida e abre pelo botão de lupa -->
+    <section class="search-card collapsed" id="searchCard">
+      <input id="searchInput" type="search" placeholder="Buscar tarefa..." />
+
+      <select id="searchCategoryInput" aria-label="Filtrar busca por categoria">
+        <option value="Todas">Todas</option>
+      </select>
+
+      <input id="searchCompletedDateInput" type="date" aria-label="Buscar por data de conclusão" />
+
+      <button class="clear-search-button" id="clearSearchButton" type="button" aria-label="Limpar busca">×</button>
+    </section>
+
+    <section class="assistant-command-card" hidden>
+      <div class="assistant-command-copy">
+        <strong>Comando rápido</strong>
+        <span id="assistantCommandStatus">Ex.: “Criar tarefa revisar contrato amanhã às 15h”</span>
+      </div>
+      <div class="assistant-command-row">
+        <input id="assistantCommandInput" type="text" placeholder="Diga ao Boby o que fazer..." />
+        <button id="runAssistantCommandButton" type="button">Executar</button>
+      </div>
+    </section>
+
+    <section class="week-calendar-card" aria-label="Agenda">
+      <header class="week-calendar-header">
+        <button class="calendar-nav-button" id="previousWeekButton" type="button" aria-label="Período anterior">‹</button>
+        <button class="week-calendar-title" id="openCalendarButton" type="button">
+          <strong id="weekRangeLabel"></strong>
+        </button>
+        <button class="calendar-nav-button" id="nextWeekButton" type="button" aria-label="Próximo período">›</button>
+        <button class="today-button" id="goToTodayButton" type="button">Hoje</button>
+        <div class="home-calendar-tabs" role="group" aria-label="Visualização da agenda">
+          <button id="dayAgendaViewButton" type="button">Dia</button>
+          <button class="active" id="weekAgendaViewButton" type="button">Semana</button>
+          <button id="monthAgendaViewButton" type="button">Mês</button>
+        </div>
+      </header>
+      <div class="home-day-view" id="homeDayView" hidden></div>
+      <div class="week-days" id="weekDays"></div>
+      <div class="home-month-view" id="homeMonthView" hidden>
+        <div class="home-month-weekdays" aria-hidden="true">
+          <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span>
+          <span>Sex</span><span>Sáb</span><span>Dom</span>
+        </div>
+        <div class="home-month-grid" id="homeMonthGrid"></div>
+      </div>
+    </section>
+
+    <div class="sync-status" id="syncStatus" data-status="saved" aria-live="polite">
+      <span class="sync-dot"></span>
+      <span id="syncStatusText">Salvo neste dispositivo</span>
+    </div>
+
+    <!-- Filtros/categorias -->
+    <nav class="filters" aria-label="Filtros">
+      <div class="filter-group-wrap" id="filterGroupWrap">
+        <div class="filter-group" id="filterGroup"></div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="search-inline-button" id="openSearchButton" type="button" aria-label="Buscar tarefas">
+          <span>⌕</span>
+        </button>
+
+        <button class="category-settings-button" id="openCategorySettingsButton" type="button" aria-label="Configurar categorias">
+          <span>☷</span>
+        </button>
+
+        <button class="add-inline-button" id="openTaskInputButton" type="button" aria-label="Adicionar nova atividade">
+          <span>+</span>
+        </button>
+      </div>
+    </nav>
+
+
+    <!-- Lista de tarefas -->
+    <section class="task-list" id="taskList"></section>
+  </main>
+
+
+
+
+  <!-- =====================================================
+       CONFIRMAÇÃO DE EXCLUSÃO
+       ===================================================== -->
+  <aside class="confirm-panel" id="confirmDeletePanel" aria-hidden="true">
+    <div class="confirm-card">
+      <div class="confirm-icon">×</div>
+
+      <div class="confirm-copy">
+        <strong>Excluir tarefa?</strong>
+        <p>Essa ação remove a tarefa e suas anotações.</p>
+      </div>
+
+      <div class="confirm-actions">
+        <button class="confirm-cancel-button" id="cancelDeleteTaskButton" type="button">Cancelar</button>
+        <button class="confirm-delete-button" id="confirmDeleteTaskButton" type="button">Excluir</button>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="calendar-panel" id="calendarPanel" aria-hidden="true">
+    <div class="calendar-card">
+      <div class="calendar-header">
+        <button id="previousCalendarPeriodButton" type="button" aria-label="Período anterior">‹</button>
+        <button class="calendar-period-button" id="calendarPeriodButton" type="button">
+          <strong id="calendarMonthLabel"></strong>
+        </button>
+        <button id="nextCalendarPeriodButton" type="button" aria-label="Próximo período">›</button>
+        <button class="calendar-close" id="closeCalendarButton" type="button" aria-label="Fechar calendário">×</button>
+      </div>
+      <div class="calendar-view-tabs">
+        <button class="active" id="calendarMonthViewButton" type="button">Mês</button>
+        <button id="calendarYearViewButton" type="button">Ano</button>
+      </div>
+      <div class="calendar-weekdays" id="calendarWeekdays" aria-hidden="true">
+        <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span>
+        <span>Sex</span><span>Sáb</span><span>Dom</span>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="year-grid" id="yearGrid" hidden></div>
+    </div>
+  </aside>
+
+  <!-- =====================================================
+       MODAL DE LOGIN
+       ===================================================== -->
+  <aside class="auth-panel open" id="authPanel" aria-hidden="false">
+    <div class="auth-stage">
+      <section class="auth-card" aria-labelledby="authTitle">
+        <div class="auth-brand-lockup">
+          <img class="auth-logo" src="/assets/boby-wordmark-transparent.png" alt="Boby" />
+        </div>
+
+        <div class="auth-header" hidden>
+          <h2 id="authTitle"></h2>
+          <p id="authDescription" hidden></p>
+        </div>
+
+        <div class="auth-tabs" role="tablist" aria-label="Tipo de acesso">
+          <button class="active" id="authLoginTab" type="button" role="tab" aria-selected="true">Entrar</button>
+          <button id="authSignupTab" type="button" role="tab" aria-selected="false">Criar conta</button>
+        </div>
+
+        <form class="auth-body" id="authForm" novalidate>
+          <label class="auth-field" id="authNameField" hidden>
+            <span>Nome</span>
+            <input id="authNameInput" type="text" autocomplete="name" maxlength="80" />
+            <small id="authNameError"></small>
+          </label>
+
+          <label class="auth-field" id="authBirthDateField" hidden>
+            <span>Data de nascimento</span>
+            <input id="authBirthDateInput" type="date" autocomplete="bday" />
+            <small id="authBirthDateError"></small>
+          </label>
+
+          <label class="auth-field">
+            <span>E-mail</span>
+            <input id="authEmailInput" type="email" placeholder="voce@exemplo.com" autocomplete="email" required />
+            <small id="authEmailError"></small>
+          </label>
+
+          <label class="auth-field">
+            <span>Senha</span>
+            <div class="password-field">
+              <input id="authPasswordInput" type="password" placeholder="Mínimo de 8 caracteres" autocomplete="current-password" required />
+              <button class="password-toggle" id="authPasswordToggle" type="button" aria-label="Mostrar senha">Mostrar</button>
+            </div>
+            <small id="authPasswordError"></small>
+          </label>
+
+          <label class="auth-field" id="authConfirmPasswordField" hidden>
+            <span>Confirme sua senha</span>
+            <div class="password-field">
+              <input id="authConfirmPasswordInput" type="password" placeholder="Digite a senha novamente" autocomplete="new-password" />
+              <button class="password-toggle" id="authConfirmPasswordToggle" type="button" aria-label="Mostrar confirmação de senha">Mostrar</button>
+            </div>
+            <small id="authConfirmPasswordError"></small>
+          </label>
+
+          <fieldset class="auth-captcha" id="authCaptchaField" hidden>
+            <legend>Verificação de segurança</legend>
+            <div class="auth-captcha-row">
+              <span id="authCaptchaQuestion" aria-live="polite"></span>
+              <input
+                id="authCaptchaInput"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                aria-label="Resposta da verificação de segurança"
+              />
+              <button id="authCaptchaRefreshButton" type="button" aria-label="Gerar nova verificação">↻</button>
+            </div>
+            <small id="authCaptchaError"></small>
+          </fieldset>
+
+          <div class="auth-options">
+            <label class="auth-remember" id="authRememberField">
+              <input id="authRememberInput" type="checkbox" checked />
+              <span>Continuar conectado</span>
+            </label>
+            <button class="auth-link-button" id="authResetPasswordButton" type="button">Esqueci minha senha</button>
+          </div>
+
+          <button class="auth-primary-button" id="authSubmitButton" type="submit">Entrar</button>
+          <button class="auth-link-button auth-resend-button" id="authResendButton" type="button" hidden>
+            Reenviar confirmação
+          </button>
+
+          <div class="auth-divider"><span>ou continue com</span></div>
+
+          <div class="auth-social-buttons" aria-label="Entrar com uma plataforma">
+            <button class="auth-social-button google" id="authGoogleButton" type="button">
+              <span aria-hidden="true">G</span>
+              <span>Google</span>
+            </button>
+            <button class="auth-social-button github" id="authGithubButton" type="button">
+              <span aria-hidden="true">GH</span>
+              <span>GitHub</span>
+            </button>
+            <button class="auth-social-button linkedin" id="authLinkedinButton" type="button">
+              <span aria-hidden="true">in</span>
+              <span>LinkedIn</span>
+            </button>
+          </div>
+
+          <p class="auth-status" id="authStatusText" role="status" aria-live="polite"></p>
+          <p class="auth-offline-note" id="authOfflineNote" hidden>
+            Você está offline. Conecte-se à internet para entrar pela primeira vez.
+          </p>
+        </form>
+      </section>
+    </div>
+  </aside>
+
+  <aside class="task-edit-panel" id="taskEditPanel" aria-hidden="true">
+    <form class="task-edit-card" id="taskEditForm">
+      <div class="task-edit-header">
+        <div>
+          <strong>Editar tarefa</strong>
+          <p>Atualize os detalhes e o lembrete.</p>
+        </div>
+        <button class="task-edit-close" id="closeTaskEditButton" type="button" aria-label="Fechar edição">×</button>
+      </div>
+
+      <label>
+        <span>Título</span>
+        <input id="editTaskTitle" type="text" maxlength="200" required />
+      </label>
+
+      <label>
+        <span>Categoria</span>
+        <select id="editTaskCategory"></select>
+      </label>
+
+      <div class="task-edit-grid">
+        <label>
+          <span>Data</span>
+          <input id="editTaskDate" type="date" />
+        </label>
+        <label>
+          <span>Horário</span>
+          <input id="editTaskTime" type="time" />
+        </label>
+      </div>
+
+      <p class="task-series-note" id="taskSeriesNote" hidden>
+        Esta é uma ocorrência de uma atividade recorrente. A edição vale apenas para este dia.
+      </p>
+
+      <label>
+        <span>Prioridade</span>
+        <select id="editTaskPriority">
+          <option value="normal">Normal</option>
+          <option value="high">Alta</option>
+        </select>
+      </label>
+
+      <div class="task-edit-actions">
+        <button class="confirm-cancel-button" id="cancelTaskEditButton" type="button">Cancelar</button>
+        <button class="task-edit-save" type="submit">Salvar alterações</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- =====================================================
+       POPUP DE NOTAS DA TAREFA
+       ===================================================== -->
+  <aside class="task-notes-panel" id="taskNotesPanel" aria-hidden="true">
+    <div class="task-notes-card">
+      <div class="task-notes-header">
+        <strong id="taskNotesTitle">Notas da tarefa</strong>
+
+        <button class="task-notes-close-button" id="closeTaskNotesButton" type="button" aria-label="Fechar notas">×</button>
+      </div>
+
+      <div class="notes-editor" id="taskNotesEditor" contenteditable="true" aria-label="Editor de notas da tarefa"></div>
+
+      <div class="notes-toolbar" aria-label="Formatação de texto">
+        <button type="button" data-command="bold"><strong>B</strong></button>
+        <button type="button" data-command="underline"><u>U</u></button>
+        <button type="button" data-command="strikeThrough"><s>S</s></button>
+        <button type="button" data-command="italic"><em>I</em></button>
+        <button type="button" id="notesChecklistButton" aria-label="Adicionar checklist">☑</button>
+
+        <select id="notesFontName" aria-label="Fonte">
+          <option value="Inter">Inter</option>
+          <option value="Arial">Arial</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Courier New">Courier</option>
+        </select>
+
+        <select id="notesFontSize" aria-label="Tamanho">
+          <option value="12px">12 px</option>
+          <option value="14px">14 px</option>
+          <option value="16px" selected>16 px</option>
+          <option value="18px">18 px</option>
+          <option value="20px">20 px</option>
+          <option value="24px">24 px</option>
+          <option value="28px">28 px</option>
+          <option value="32px">32 px</option>
+        </select>
+
+        <div class="notes-color-wrap">
+          <button class="notes-color-trigger" id="notesColorToggle" type="button" aria-label="Selecionar cor">
+            <span class="notes-color-letter">A</span>
+            <span class="notes-color-underline" id="notesCurrentColor" style="--current-note-color: #2b1f16"></span>
+          </button>
+
+          <div class="notes-color-popover" id="notesColorPopover" aria-hidden="true">
+            <button type="button" class="notes-color-option" data-color="#2b1f16" style="--note-color: #2b1f16" aria-label="Marrom escuro"></button>
+            <button type="button" class="notes-color-option" data-color="#6f5b48" style="--note-color: #6f5b48" aria-label="Cinza quente"></button>
+            <button type="button" class="notes-color-option" data-color="#31523b" style="--note-color: #31523b" aria-label="Verde"></button>
+            <button type="button" class="notes-color-option" data-color="#8f3933" style="--note-color: #8f3933" aria-label="Vermelho"></button>
+            <button type="button" class="notes-color-option" data-color="#b1862d" style="--note-color: #b1862d" aria-label="Dourado"></button>
+
+            <label class="notes-custom-color" aria-label="Cor personalizada">
+              <input id="notesTextColor" type="color" value="#3a2416" />
+              <span>+</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =====================================================
+       PAINEL DE CATEGORIAS
+       ===================================================== -->
+  <aside class="category-panel" id="categoryPanel" data-category-backdrop aria-hidden="true">
+    <div class="category-card">
+      <div class="category-card-header">
+        <strong>Categorias</strong>
+        <button class="category-close-button" id="closeCategoryPanelButton" data-close-category-panel type="button" aria-label="Fechar categorias">×</button>
+      </div>
+
+      <div class="category-list" id="categoryList"></div>
+
+      <div class="new-category-row">
+        <input id="newCategoryInput" type="text" maxlength="60" placeholder="Nova categoria..." />
+        <button id="addCategoryButton" type="button">Adicionar</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Configuração pública disponível também fora do Vite. -->
+  <script src="/boby-config.js"></script>
+  <!-- App em módulos modernos: rode com Live Server, Vite ou qualquer servidor local. -->
+  <script type="module" src="src/js/app.js"></script>
+</body>
+</html>
