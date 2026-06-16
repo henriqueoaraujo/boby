@@ -22,12 +22,13 @@ No Supabase, habilite os provedores desejados em **Authentication**. Para Google
 GitHub e LinkedIn, configure a URL pública do aplicativo nas URLs de
 redirecionamento autorizadas.
 
-Execute também `supabase/schema.sql` no **SQL Editor** do projeto. Sem esse passo,
-o login funciona, mas tarefas e categorias permanecem apenas no armazenamento local.
+Execute também `supabase/setup-completo-boby.sql` no **SQL Editor** do projeto.
+Sem esse passo, o login funciona, mas tarefas e categorias permanecem apenas no
+armazenamento local.
 
-Para projetos que já estavam configurados antes desta versão, execute
-`supabase/migrations/v57.sql`. A migração corrige as tabelas, permissões, políticas
-RLS e a restrição de prioridades usadas pela sincronização.
+O arquivo `supabase/setup-completo-boby.sql` junta o schema atual e as migrações
+necessárias em um único script. Ele pode ser executado mais de uma vez com
+segurança.
 
 O cadastro por e-mail exige a confirmação do link enviado pelo Supabase antes do
 primeiro login. Google, GitHub e LinkedIn precisam ser habilitados individualmente

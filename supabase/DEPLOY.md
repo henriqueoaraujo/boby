@@ -4,7 +4,11 @@ Projeto: `wibpacyerlbajjnhtpud`
 
 ## Banco
 
-Execute no SQL Editor, nesta ordem:
+Opção simples: execute no SQL Editor:
+
+1. `setup-completo-boby.sql`
+
+Opção por migrations, se preferir manter o histórico manualmente:
 
 1. `migrations/v57.sql`
 2. `migrations/v58-production.sql`
