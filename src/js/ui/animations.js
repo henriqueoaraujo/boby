@@ -160,6 +160,7 @@ let greetingAnimationStarted = false;
 let headlineAnimationStarted = false;
 let greetingAnimationRunId = 0;
 let latestWeather = null;
+let weatherDataReady = false;
 let weatherDataResolver = null;
 
 function getWeatherMessage() {
@@ -183,13 +184,14 @@ function getWeatherMessage() {
 }
 
 window.addEventListener("boby:weather-update", event => {
-  latestWeather = event.detail;
+  latestWeather = event.detail || null;
+  weatherDataReady = true;
   weatherDataResolver?.();
   weatherDataResolver = null;
 });
 
 function waitForWeatherData() {
-  if (latestWeather) return Promise.resolve();
+  if (weatherDataReady) return Promise.resolve();
   return new Promise(resolve => {
     weatherDataResolver = resolve;
   });
@@ -222,6 +224,7 @@ export function resetGreetingAnimation() {
   greetingAnimationStarted = false;
   greetingAnimationRunId++;
   latestWeather = null;
+  weatherDataReady = false;
   weatherDataResolver?.();
   weatherDataResolver = null;
   dom.greeting.textContent = "";

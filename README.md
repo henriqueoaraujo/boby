@@ -1,6 +1,28 @@
-# Boby v1.0
+# Boby v1.05
 
-Te aprosente o Boby, meu organizador de tarefas e compromissos.
+Te apresento o Boby, meu organizador de tarefas e compromissos.
+
+## Atualizações
+
+### Boby v1.05 — publicado
+
+- Revisão da localização do usuário para pedir autorização pelo navegador.
+- Uso da localização autorizada para identificar cidade aproximada.
+- Busca da previsão do tempo por latitude e longitude.
+- Menu mobile de configurações reorganizado como barra superior.
+- Melhor quebra de linha nas categorias e informações das tarefas no celular.
+- Ajuste fino de ícones e textos para telas pequenas.
+
+### Boby v1.0 — publicado
+
+- Primeira versão publicada do Boby.
+- Autenticação obrigatória com Supabase.
+- Agenda com visualização por dia, semana e mês.
+- Tarefas com data, horário, prioridade e recorrência.
+- Sincronização de tarefas e categorias no Supabase.
+- Interface responsiva para desktop e celular.
+
+## Visão Geral
 
 - Tela de autenticação obrigatória antes do acesso ao sistema.
 - Login por e-mail e senha ou Google.

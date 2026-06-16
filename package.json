@@ -1,6 +1,6 @@
 {
   "name": "boby",
-  "version": "0.56.0",
+  "version": "1.0.5",
   "private": true,
   "description": "Boby, assistente minimalista para organização de tarefas.",
   "scripts": {

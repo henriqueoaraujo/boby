@@ -57,6 +57,47 @@ async function geocodeCity(name) {
   };
 }
 
+function requestBrowserLocation() {
+  if (!("geolocation" in navigator) || !navigator.onLine) return Promise.resolve(null);
+
+  return new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(
+      position => resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      }),
+      () => resolve(null),
+      {
+        enableHighAccuracy: false,
+        maximumAge: 1000 * 60 * 30,
+        timeout: 9000
+      }
+    );
+  });
+}
+
+async function reverseGeocodeCoordinates({ latitude, longitude }) {
+  const url = new URL("https://api.bigdatacloud.net/data/reverse-geocode-client");
+  url.searchParams.set("latitude", String(latitude));
+  url.searchParams.set("longitude", String(longitude));
+  url.searchParams.set("localityLanguage", "pt");
+
+  const response = await fetchWithTimeout(url);
+  if (!response.ok) throw new Error("Localização indisponível.");
+
+  const result = await response.json();
+  const cityParts = [
+    result.city || result.locality || result.principalSubdivision,
+    result.principalSubdivision
+  ].filter(Boolean);
+
+  return {
+    latitude,
+    longitude,
+    city: [...new Set(cityParts)].join(", ") || "sua localização"
+  };
+}
+
 async function fetchForecast(location) {
   const url = new URL("https://api.open-meteo.com/v1/forecast");
   url.searchParams.set("latitude", location.latitude);
@@ -93,6 +134,22 @@ async function fetchForecast(location) {
   };
 }
 
+export async function updateWeatherForCurrentLocation() {
+  const coordinates = await requestBrowserLocation();
+  if (!coordinates) return null;
+
+  try {
+    const location = await reverseGeocodeCoordinates(coordinates);
+    const data = await fetchForecast(location);
+    saveJson(LOCATION_KEY, location);
+    saveJson(WEATHER_CACHE_KEY, data);
+    announceWeather(data);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export async function updateWeatherForCity(cityName) {
   const name = String(cityName || "").trim();
   if (!name || !navigator.onLine) {
@@ -121,5 +178,10 @@ export async function initializeWeather() {
   const cached = readJson(WEATHER_CACHE_KEY);
 
   if (cached) announceWeather(cached);
-  if (city) await updateWeatherForCity(city);
+  const locationWeather = await updateWeatherForCurrentLocation();
+  if (locationWeather) return locationWeather;
+  if (city) return updateWeatherForCity(city);
+
+  announceWeather(null);
+  return null;
 }

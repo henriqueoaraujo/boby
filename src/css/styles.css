@@ -182,6 +182,11 @@ p {
   transform: translateY(-1px);
 }
 
+.settings-mobile-label,
+.settings-mobile-caret {
+  display: none;
+}
+
 /* =========================================================
    DROPDOWN DE CONFIGURAÇÕES
    ========================================================= */
@@ -3978,24 +3983,87 @@ body {
 
   .app {
     width: min(100% - 16px, 920px);
-    padding: 14px 0 28px;
+    padding: 64px 0 28px;
   }
 
   .floating-settings-button {
-    top: 12px;
-    right: 12px;
-    width: 42px;
-    height: 42px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    height: 46px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    justify-items: start;
+    gap: 10px;
+    padding: 0 14px;
+    border-radius: 17px;
+    font-size: .92rem;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    transform: none;
+  }
+
+  .settings-icon {
+    display: none !important;
+  }
+
+  .settings-mobile-label,
+  .settings-mobile-caret {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .settings-mobile-caret {
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    color: var(--progress-color);
+    background: color-mix(in srgb, var(--progress-color), transparent 90%);
+    transition: transform .22s cubic-bezier(.22, 1, .36, 1);
+  }
+
+  .floating-settings-button:has(+ .settings-dropdown.open) .settings-mobile-caret {
+    transform: rotate(180deg);
   }
 
   .settings-dropdown {
-    top: 62px;
+    top: 60px;
     right: 8px;
     left: 8px;
     width: auto;
-    max-height: calc(100dvh - 76px);
+    max-height: calc(100dvh - 72px);
     padding: 8px;
     border-radius: 20px;
+    transform-origin: top center;
+  }
+
+  .settings-dropdown.open {
+    transform: translateY(0) scale(1);
+  }
+
+  .settings-menu-button {
+    min-height: 44px;
+    border-radius: 15px;
+    font-size: .88rem;
+  }
+
+  .settings-content.open {
+    padding-top: 7px;
+  }
+
+  .settings-account-summary {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+  }
+
+  .profile-avatar {
+    width: 42px;
+    height: 42px;
   }
 
   .hero-card {
@@ -4227,9 +4295,9 @@ body {
   }
 
   .task-item {
-    grid-template-columns: auto minmax(0, 1fr) repeat(3, 32px);
-    gap: 7px;
-    padding: 11px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 10px;
+    padding: 12px;
     border-radius: 18px;
   }
 
@@ -4239,13 +4307,17 @@ body {
   }
 
   .task-title {
-    font-size: .98rem;
+    font-size: .96rem;
     line-height: 1.2;
     overflow-wrap: anywhere;
   }
 
   .task-meta {
-    gap: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 6px;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .task-category,
@@ -4254,19 +4326,41 @@ body {
   .task-completed-date,
   .task-series,
   .task-carried {
-    padding: 0 6px 0 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    padding: 3px 7px;
     border-left: 0;
-    font-size: .7rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent), transparent 93%);
+    font-size: .68rem;
   }
 
   .edit-button,
   .notes-button,
   .delete-button {
-    width: 32px;
-    height: 32px;
+    grid-row: 2;
+    width: 34px;
+    height: 34px;
     opacity: .72;
     margin-right: 0;
     border-radius: 11px;
+    font-size: 1rem;
+  }
+
+  .edit-button {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .notes-button {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .delete-button {
+    grid-column: 2;
+    justify-self: end;
   }
 
   .calendar-panel {
@@ -4333,7 +4427,7 @@ body {
 @media (max-width: 430px) {
   .app {
     width: min(100% - 12px, 920px);
-    padding-top: 10px;
+    padding-top: 62px;
   }
 
   .hero-card {
@@ -4390,7 +4484,7 @@ body {
   }
 
   .task-item {
-    grid-template-columns: auto minmax(0, 1fr) repeat(3, 32px);
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: start;
   }
 
@@ -4405,15 +4499,18 @@ body {
   }
 
   .edit-button {
-    grid-column: 3;
+    grid-column: 2;
+    justify-self: start;
   }
 
   .notes-button {
-    grid-column: 4;
+    grid-column: 2;
+    justify-self: center;
   }
 
   .delete-button {
-    grid-column: 5;
+    grid-column: 2;
+    justify-self: end;
   }
 
   .auth-panel {

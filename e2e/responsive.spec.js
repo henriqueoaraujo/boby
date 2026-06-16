@@ -83,4 +83,9 @@ test("agenda principal não cria overflow horizontal no celular", async ({ page 
   await page.locator("#openSearchButton").click();
   await expect(page.locator("#searchCard")).not.toHaveClass(/collapsed/);
   await expectNoHorizontalOverflow(page);
+
+  await page.locator("#settingsButton").click();
+  await expect(page.locator("#settingsPanel")).toHaveClass(/open/);
+  await expect(page.locator(".settings-mobile-label")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
