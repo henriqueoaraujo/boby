@@ -10,8 +10,9 @@ Te apresento o Boby, meu organizador de tarefas e compromissos.
 - Uso da localização autorizada para identificar cidade aproximada.
 - Busca da previsão do tempo por latitude e longitude.
 - Menu mobile de configurações reorganizado como barra superior.
-- Melhor quebra de linha nas categorias e informações das tarefas no celular.
-- Ajuste fino de ícones e textos para telas pequenas.
+- Tentativa de melhora na quebra de linha nas categorias e informações das tarefas no celular.
+- Ajuste bem porco de ícones e textos para telas pequenas.
+- Na próxima eu faço eu tento melhorar mais um pouco, vou dormir kkk.
 
 ### Boby v1.0 — publicado
 
