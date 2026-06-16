@@ -51,6 +51,24 @@ export function toggleSettingsSection(button, content) {
   }
 }
 
+export function toggleSecuritySubsection(button, content) {
+  const isAlreadyOpen = content.classList.contains("open");
+  const sections = [
+    [dom.passwordSettingsToggle, dom.passwordSettingsContent],
+    [dom.deleteAccountSettingsToggle, dom.deleteAccountSettingsContent]
+  ];
+
+  sections.forEach(([sectionButton, sectionContent]) => {
+    sectionButton.setAttribute("aria-expanded", "false");
+    sectionContent.classList.remove("open");
+  });
+
+  if (!isAlreadyOpen) {
+    content.classList.add("open");
+    button.setAttribute("aria-expanded", "true");
+  }
+}
+
 export function loadPreferencesControls() {
   dom.hideDoneToggle.checked = state.preferences.hideCompleted;
   dom.confirmDeleteToggle.checked = state.preferences.confirmDelete;

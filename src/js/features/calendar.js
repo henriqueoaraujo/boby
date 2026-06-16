@@ -10,9 +10,12 @@ import { getTodayKey } from "../core/taskRules.js";
 import { getLocale, t } from "../core/i18n.js";
 
 let visibleMonth = fromDateKey(state.selectedDueDate);
-let calendarView = "days";
+let calendarView = "months";
 let homeCalendarView = "week";
+let homeTransitionId = 0;
+let popupTransitionId = 0;
 const YEAR_PAGE_SIZE = 12;
+const HOME_VIEW_ORDER = { day: 0, week: 1, month: 2 };
 
 function summarizeTasksByDate() {
   const summaries = new Map();
@@ -255,8 +258,13 @@ function renderHomeMonthCalendar() {
   }
 }
 
-export function setHomeCalendarView(view) {
-  homeCalendarView = ["day", "month"].includes(view) ? view : "week";
+function getHomeViewElement(view) {
+  if (view === "day") return dom.homeDayView;
+  if (view === "month") return dom.homeMonthView;
+  return dom.weekDays;
+}
+
+function syncHomeViewState() {
   const isMonth = homeCalendarView === "month";
   const isDay = homeCalendarView === "day";
 
@@ -266,7 +274,70 @@ export function setHomeCalendarView(view) {
   dom.dayAgendaViewButton.classList.toggle("active", isDay);
   dom.weekAgendaViewButton.classList.toggle("active", !isMonth && !isDay);
   dom.monthAgendaViewButton.classList.toggle("active", isMonth);
+  dom.dayAgendaViewButton.setAttribute("aria-pressed", String(isDay));
+  dom.weekAgendaViewButton.setAttribute("aria-pressed", String(!isMonth && !isDay));
+  dom.monthAgendaViewButton.setAttribute("aria-pressed", String(isMonth));
+  dom.dayAgendaViewButton.closest(".home-calendar-tabs")
+    ?.style.setProperty("--calendar-tab-index", String(HOME_VIEW_ORDER[homeCalendarView]));
+}
+
+export async function setHomeCalendarView(view) {
+  const nextView = ["day", "month"].includes(view) ? view : "week";
+  const previousView = homeCalendarView;
+
+  if (nextView === previousView) {
+    renderWeekCalendar();
+    syncHomeViewState();
+    return;
+  }
+
+  const transitionId = ++homeTransitionId;
+  const previousElement = getHomeViewElement(previousView);
+  const nextElement = getHomeViewElement(nextView);
+  const direction = HOME_VIEW_ORDER[nextView] > HOME_VIEW_ORDER[previousView] ? 1 : -1;
+  const canAnimate = nextElement?.animate
+    && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  [dom.homeDayView, dom.weekDays, dom.homeMonthView].forEach(element => {
+    element.getAnimations?.().forEach(animation => animation.cancel());
+    element.hidden = element !== previousElement && element !== nextElement;
+  });
+
+  homeCalendarView = nextView;
   renderWeekCalendar();
+  nextElement.hidden = false;
+  syncHomeViewState();
+  previousElement.hidden = false;
+
+  if (!canAnimate) {
+    syncHomeViewState();
+    return;
+  }
+
+  await Promise.all([
+    previousElement.animate([
+      { opacity: 1, transform: "translateX(0) scale(1)" },
+      { opacity: 0, transform: `translateX(${direction * -28}px) scale(.985)` }
+    ], {
+      duration: 250,
+      easing: "cubic-bezier(.4, 0, 1, 1)",
+      fill: "forwards"
+    }).finished.catch(() => {}),
+    nextElement.animate([
+      { opacity: 0, transform: `translateX(${direction * 28}px) scale(.985)` },
+      { opacity: 1, transform: "translateX(0) scale(1)" }
+    ], {
+      duration: 360,
+      easing: "cubic-bezier(.22, 1, .36, 1)",
+      fill: "forwards"
+    }).finished.catch(() => {})
+  ]);
+
+  if (transitionId !== homeTransitionId) return;
+  [previousElement, nextElement].forEach(element => {
+    element.getAnimations().forEach(animation => animation.cancel());
+  });
+  syncHomeViewState();
 }
 
 function renderDaysCalendar() {
@@ -332,8 +403,13 @@ function renderMonthPicker() {
       <span>${monthCount} ${monthCount === 1 ? t("task") : t("tasks")}</span>
     `;
     button.addEventListener("click", () => {
-      visibleMonth = new Date(year, month, 1);
-      setCalendarView("days");
+      const selected = fromDateKey(state.selectedDueDate);
+      const selectedDay = selected.getFullYear() === year && selected.getMonth() === month
+        ? selected.getDate()
+        : 1;
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      selectCalendarDate(toDateKey(new Date(year, month, Math.min(selectedDay, lastDay))));
+      closeCalendar();
     });
     dom.yearGrid.appendChild(button);
   }
@@ -347,6 +423,7 @@ function renderYearPicker() {
   const activeYear = visibleMonth.getFullYear();
   const firstYear = getYearPageStart(activeYear);
   const lastYear = firstYear + YEAR_PAGE_SIZE - 1;
+  const summaries = summarizeTasksByDate();
 
   dom.calendarMonthLabel.textContent = `${firstYear} – ${lastYear}`;
   dom.yearGrid.innerHTML = "";
@@ -356,7 +433,13 @@ function renderYearPicker() {
     button.type = "button";
     button.className = "year-option";
     button.classList.toggle("selected", year === activeYear);
-    button.textContent = String(year);
+    const yearCount = [...summaries.entries()].reduce((total, [date, summary]) => {
+      return fromDateKey(date).getFullYear() === year ? total + summary.count : total;
+    }, 0);
+    button.innerHTML = `
+      <strong>${year}</strong>
+      <span>${yearCount} ${yearCount === 1 ? t("task") : t("tasks")}</span>
+    `;
     button.addEventListener("click", () => {
       visibleMonth = new Date(year, visibleMonth.getMonth(), 1);
       setCalendarView("months");
@@ -366,37 +449,77 @@ function renderYearPicker() {
 }
 
 export function renderCalendar() {
-  const isDays = calendarView === "days";
   const isYears = calendarView === "years";
-  dom.calendarGrid.hidden = !isDays;
-  dom.calendarWeekdays.hidden = !isDays;
-  dom.yearGrid.hidden = isDays;
+  dom.calendarGrid.hidden = true;
+  dom.calendarWeekdays.hidden = true;
+  dom.yearGrid.hidden = false;
   dom.calendarMonthViewButton.classList.toggle("active", !isYears);
   dom.calendarYearViewButton.classList.toggle("active", isYears);
+  dom.calendarMonthViewButton.setAttribute("aria-pressed", String(!isYears));
+  dom.calendarYearViewButton.setAttribute("aria-pressed", String(isYears));
+  dom.calendarMonthViewButton.closest(".calendar-view-tabs")
+    ?.style.setProperty("--calendar-popup-tab-index", isYears ? "1" : "0");
   dom.calendarPeriodButton.setAttribute(
     "aria-label",
-    isDays ? "Selecionar mês e ano" : isYears ? "Voltar aos meses" : "Selecionar ano"
+    isYears ? "Voltar aos meses" : "Selecionar ano"
   );
 
-  if (isDays) renderDaysCalendar();
-  else if (isYears) renderYearPicker();
+  if (isYears) renderYearPicker();
   else renderMonthPicker();
 }
 
-export function setCalendarView(view) {
-  calendarView = ["days", "months", "years"].includes(view) ? view : "days";
+export async function setCalendarView(view) {
+  const nextView = view === "years" ? "years" : "months";
+  if (nextView === calendarView) {
+    renderCalendar();
+    return;
+  }
+
+  const transitionId = ++popupTransitionId;
+  const direction = nextView === "years" ? 1 : -1;
+  const canAnimate = dom.yearGrid.animate
+    && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  dom.yearGrid.getAnimations().forEach(animation => animation.cancel());
+
+  if (canAnimate) {
+    await dom.yearGrid.animate([
+      { opacity: 1, transform: "translateX(0)" },
+      { opacity: 0, transform: `translateX(${direction * -20}px)` }
+    ], {
+      duration: 150,
+      easing: "ease-in",
+      fill: "forwards"
+    }).finished.catch(() => {});
+  }
+
+  if (transitionId !== popupTransitionId) return;
+  calendarView = nextView;
   renderCalendar();
+
+  if (canAnimate) {
+    await dom.yearGrid.animate([
+      { opacity: 0, transform: `translateX(${direction * 20}px)` },
+      { opacity: 1, transform: "translateX(0)" }
+    ], {
+      duration: 280,
+      easing: "cubic-bezier(.22, 1, .36, 1)",
+      fill: "forwards"
+    }).finished.catch(() => {});
+    if (transitionId === popupTransitionId) {
+      dom.yearGrid.getAnimations().forEach(animation => animation.cancel());
+    }
+  }
 }
 
 export function toggleCalendarPeriodPicker() {
-  if (calendarView === "days") setCalendarView("months");
-  else if (calendarView === "months") setCalendarView("years");
+  if (calendarView === "months") setCalendarView("years");
   else setCalendarView("months");
 }
 
 export function openCalendar() {
   visibleMonth = fromDateKey(state.selectedDueDate);
-  calendarView = "days";
+  calendarView = "months";
   renderCalendar();
   dom.calendarPanel.classList.add("open");
   dom.calendarPanel.setAttribute("aria-hidden", "false");
@@ -412,9 +535,7 @@ export function closeCalendarOnBackdrop(event) {
 }
 
 export function showPreviousCalendarPeriod() {
-  if (calendarView === "days") {
-    visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
-  } else if (calendarView === "months") {
+  if (calendarView === "months") {
     visibleMonth = new Date(visibleMonth.getFullYear() - 1, visibleMonth.getMonth(), 1);
   } else {
     visibleMonth = new Date(visibleMonth.getFullYear() - YEAR_PAGE_SIZE, visibleMonth.getMonth(), 1);
@@ -423,9 +544,7 @@ export function showPreviousCalendarPeriod() {
 }
 
 export function showNextCalendarPeriod() {
-  if (calendarView === "days") {
-    visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
-  } else if (calendarView === "months") {
+  if (calendarView === "months") {
     visibleMonth = new Date(visibleMonth.getFullYear() + 1, visibleMonth.getMonth(), 1);
   } else {
     visibleMonth = new Date(visibleMonth.getFullYear() + YEAR_PAGE_SIZE, visibleMonth.getMonth(), 1);

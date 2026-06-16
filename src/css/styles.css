@@ -438,6 +438,67 @@ p {
   font-size: .88rem;
 }
 
+.security-subsection {
+  gap: 0;
+  overflow: hidden;
+}
+
+.security-subsection-title {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.security-subsection-title i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  color: var(--progress-color);
+  background: color-mix(in srgb, var(--progress-color), transparent 90%);
+  font-style: normal;
+  line-height: 1;
+  transition: transform .24s cubic-bezier(.22, 1, .36, 1);
+}
+
+.security-subsection-title[aria-expanded="true"] i {
+  transform: rotate(180deg);
+}
+
+.security-subsection-content {
+  display: grid;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height .3s cubic-bezier(.22, 1, .36, 1),
+    opacity .2s ease,
+    margin-top .2s ease;
+}
+
+.security-subsection-content > * {
+  min-width: 0;
+}
+
+.security-subsection-content.open {
+  max-height: 620px;
+  gap: 10px;
+  margin-top: 10px;
+  opacity: 1;
+}
+
 .profile-save-button,
 .profile-security .mini-action-button {
   min-height: 40px;
@@ -1608,6 +1669,27 @@ input::placeholder {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .week-calendar-card {
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .week-calendar-header {
+    grid-template-columns: 42px 1fr 42px;
+    gap: 6px;
+  }
+
+  .week-calendar-title {
+    min-width: 0;
+    text-align: center;
+  }
+
+  .week-calendar-title strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .task-input-toolbar #addTaskButton {
     grid-column: 1 / -1;
   }
@@ -2084,8 +2166,8 @@ body.auth-locked {
   position: fixed;
   inset: 0;
   display: grid;
-  place-items: center;
-  padding: 28px 18px;
+  place-items: start center;
+  padding: 34px 18px 24px;
   background: var(--bg);
   overflow-y: auto;
   pointer-events: none;
@@ -2098,23 +2180,19 @@ body.auth-locked {
 
 .auth-stage {
   width: 100%;
-  min-height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 400px);
-  place-items: center;
+  place-items: start center;
   justify-content: center;
-  align-content: center;
+  align-content: start;
 }
 
 .auth-panel.signup-mode {
   align-items: start;
-  padding-top: 34px;
-  padding-bottom: 24px;
 }
 
 .auth-panel.signup-mode .auth-stage {
   grid-template-columns: minmax(0, 520px);
-  align-content: start;
 }
 
 .auth-panel.signup-mode .auth-card {
@@ -2123,11 +2201,6 @@ body.auth-locked {
 
 .auth-panel.signup-mode .auth-logo {
   height: 126px;
-}
-
-.auth-panel.signup-mode .auth-brand-lockup {
-  margin-top: 12px;
-  margin-bottom: 8px;
 }
 
 .auth-panel.signup-mode .auth-header {
@@ -2162,7 +2235,7 @@ body.auth-locked {
 .auth-card {
   width: 100%;
   max-width: 400px;
-  align-self: center;
+  align-self: start;
   justify-self: center;
   padding: 20px 10px;
   border: 0;
@@ -2181,13 +2254,20 @@ body.auth-locked {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 18px;
+  margin: 12px 0 18px;
 }
 
 .auth-logo {
   width: min(190px, 58vw);
   height: 126px;
   object-fit: contain;
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform .3s cubic-bezier(.22, 1, .36, 1);
+}
+
+.auth-brand-lockup:hover .auth-logo {
+  transform: scale(1.025);
 }
 
 .auth-header {
@@ -2388,19 +2468,14 @@ body.auth-locked {
 @media (max-width: 520px) {
   .auth-stage {
     grid-template-columns: minmax(0, 400px);
-    place-items: center;
-    min-height: 100%;
-    padding: 18px 0;
+    place-items: start center;
+    padding: 0;
   }
 
   .auth-card {
     width: min(400px, 100%);
     min-height: auto;
     padding: 12px 4px;
-  }
-
-  .auth-panel.signup-mode {
-    padding-top: 22px;
   }
 
   .auth-panel.signup-mode .auth-body {
@@ -3089,14 +3164,33 @@ body.auth-locked {
 }
 
 .home-calendar-tabs {
-  display: flex;
-  gap: 4px;
+  --calendar-tab-index: 1;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 3px;
   border-radius: 12px;
   background: var(--accent-soft);
+  isolation: isolate;
+}
+
+.home-calendar-tabs::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 9px;
+  background: var(--progress-color);
+  transform: translateX(calc(var(--calendar-tab-index) * 100%));
+  transition: transform .34s cubic-bezier(.22, 1, .36, 1);
 }
 
 .home-calendar-tabs button {
+  position: relative;
+  z-index: 1;
   min-height: 32px;
   padding: 0 11px;
   border: 0;
@@ -3104,11 +3198,22 @@ body.auth-locked {
   color: var(--muted);
   background: transparent;
   cursor: pointer;
+  transition: color .22s ease, transform .22s ease;
 }
 
 .home-calendar-tabs button.active {
   color: #fff;
-  background: var(--progress-color);
+  background: transparent;
+  transform: scale(1.02);
+}
+
+.home-calendar-content {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-calendar-content > [hidden] {
+  display: none;
 }
 
 .week-days {
@@ -3472,25 +3577,48 @@ body.auth-locked {
 }
 
 .calendar-view-tabs {
+  --calendar-popup-tab-index: 0;
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 0;
+  padding: 3px;
   margin-bottom: 14px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  isolation: isolate;
+}
+
+.calendar-view-tabs::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 2);
+  border-radius: 9px;
+  background: var(--accent);
+  transform: translateX(calc(var(--calendar-popup-tab-index) * 100%));
+  transition: transform .32s cubic-bezier(.22, 1, .36, 1);
 }
 
 .calendar-view-tabs button {
+  position: relative;
+  z-index: 1;
   min-height: 36px;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 10px;
   color: inherit;
   background: transparent;
   cursor: pointer;
+  transition: color .2s ease, transform .2s ease;
 }
 
 .calendar-view-tabs button.active {
   color: var(--accent-text);
-  border-color: var(--accent);
-  background: var(--accent);
+  background: transparent;
+  transform: scale(1.015);
 }
 
 .year-grid {
@@ -3522,6 +3650,9 @@ body.auth-locked {
 }
 
 .year-option {
+  display: grid;
+  place-content: center;
+  gap: 5px;
   min-height: 58px;
   border: 1px solid var(--line);
   border-radius: 13px;
@@ -3532,11 +3663,27 @@ body.auth-locked {
   transition: border-color .16s ease, background .16s ease, transform .16s ease;
 }
 
+.year-option span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
 .year-option:hover,
 .year-option.selected {
   border-color: var(--progress-color);
   background: color-mix(in srgb, var(--progress-color), transparent 88%);
   transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-logo,
+  .home-calendar-tabs::before,
+  .calendar-view-tabs::before,
+  .home-calendar-tabs button,
+  .calendar-view-tabs button {
+    transition: none;
+  }
 }
 
 .task-series-note {
@@ -3813,6 +3960,487 @@ body.auth-locked {
 
 .floating-settings-button:hover .settings-icon {
   transform: rotate(360deg);
+}
+
+/* =========================================================
+   RESPONSIVIDADE MOBILE FINAL
+   ========================================================= */
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+@media (max-width: 720px) {
+  body {
+    min-width: 0;
+  }
+
+  .app {
+    width: min(100% - 16px, 920px);
+    padding: 14px 0 28px;
+  }
+
+  .floating-settings-button {
+    top: 12px;
+    right: 12px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .settings-dropdown {
+    top: 62px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-height: calc(100dvh - 76px);
+    padding: 8px;
+    border-radius: 20px;
+  }
+
+  .hero-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .hero-copy {
+    min-width: 0;
+  }
+
+  .assistant-line,
+  .headline-line {
+    max-width: 100%;
+  }
+
+  .headline-line {
+    font-size: clamp(1.05rem, 5.2vw, 1.5rem);
+    line-height: 1.12;
+  }
+
+  .progress-ring {
+    width: 72px;
+    height: 72px;
+  }
+
+  .progress-track,
+  .progress-value {
+    stroke-width: 10;
+  }
+
+  .progress-ring span {
+    font-size: 1.05rem;
+  }
+
+  .week-calendar-card {
+    margin: 12px 0 8px;
+    padding: 10px;
+    border-radius: 20px;
+  }
+
+  .week-calendar-header {
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .week-calendar-header > button {
+    min-height: 36px;
+    border-radius: 11px;
+  }
+
+  .calendar-nav-button {
+    width: 40px;
+    font-size: 24px;
+  }
+
+  .week-calendar-title {
+    min-width: 0;
+    padding-inline: 8px;
+    text-align: center;
+  }
+
+  .week-calendar-title strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .today-button {
+    grid-column: 1 / 2;
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+
+  .home-calendar-tabs {
+    grid-column: 2 / 4;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .home-calendar-tabs button {
+    min-height: 34px;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+
+  .week-days {
+    gap: 3px;
+  }
+
+  .week-day {
+    min-height: 64px;
+    gap: 2px;
+    padding: 7px 1px;
+    border-radius: 12px;
+  }
+
+  .week-day span {
+    font-size: 9px;
+  }
+
+  .week-day strong {
+    font-size: 16px;
+  }
+
+  .week-day small {
+    display: none;
+  }
+
+  .home-month-weekdays,
+  .home-month-grid {
+    gap: 3px;
+  }
+
+  .home-month-day {
+    min-height: 40px;
+    border-radius: 11px;
+  }
+
+  .home-day-view {
+    max-height: 54dvh;
+    padding: 8px;
+    border-radius: 16px;
+  }
+
+  .day-hour-row {
+    min-height: 48px;
+    grid-template-columns: 44px 1fr;
+  }
+
+  .day-hour-row > time {
+    padding-right: 7px;
+    font-size: 9px;
+  }
+
+  .day-hour-events {
+    padding-left: 8px;
+  }
+
+  .input-card,
+  .search-card {
+    padding: 9px;
+    border-radius: 20px;
+  }
+
+  .input-card:not(.collapsed) {
+    max-height: 980px;
+  }
+
+  .search-card:not(.collapsed) {
+    max-height: 260px;
+  }
+
+  .task-input-toolbar,
+  .search-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #taskInput,
+  #searchInput {
+    min-height: 46px;
+  }
+
+  .task-input-toolbar #addTaskButton,
+  .search-card #searchInput {
+    grid-column: 1 / -1;
+  }
+
+  .clear-search-button {
+    width: auto;
+  }
+
+  .recurrence-options {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .recurrence-range {
+    grid-template-columns: 1fr;
+  }
+
+  .recurrence-presets,
+  .weekday-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filters {
+    gap: 8px;
+    padding: 12px 0;
+  }
+
+  .filter-group {
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .filter-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter {
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+
+  .filter-actions {
+    gap: 6px;
+  }
+
+  .add-inline-button,
+  .search-inline-button,
+  .category-settings-button {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 14px;
+  }
+
+  .task-list {
+    gap: 8px;
+  }
+
+  .task-item {
+    grid-template-columns: auto minmax(0, 1fr) repeat(3, 32px);
+    gap: 7px;
+    padding: 11px;
+    border-radius: 18px;
+  }
+
+  .task-check {
+    width: 20px;
+    height: 20px;
+  }
+
+  .task-title {
+    font-size: .98rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .task-meta {
+    gap: 4px;
+  }
+
+  .task-category,
+  .task-time,
+  .task-due,
+  .task-completed-date,
+  .task-series,
+  .task-carried {
+    padding: 0 6px 0 0;
+    border-left: 0;
+    font-size: .7rem;
+  }
+
+  .edit-button,
+  .notes-button,
+  .delete-button {
+    width: 32px;
+    height: 32px;
+    opacity: .72;
+    margin-right: 0;
+    border-radius: 11px;
+  }
+
+  .calendar-panel {
+    padding: 10px;
+    place-items: end center;
+  }
+
+  .calendar-card {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+    padding: 14px;
+    border-radius: 22px 22px 18px 18px;
+  }
+
+  .calendar-header {
+    grid-template-columns: 38px minmax(0, 1fr) 38px 38px;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .calendar-period-button {
+    padding-inline: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .year-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .year-month {
+    min-height: 64px;
+  }
+
+  .auth-panel {
+    padding: 20px 12px;
+    align-items: start;
+  }
+
+  .auth-stage,
+  .auth-panel.signup-mode .auth-stage {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    place-items: start center;
+  }
+
+  .auth-card,
+  .auth-panel.signup-mode .auth-card {
+    width: min(100%, 440px);
+    max-width: none;
+    padding: 10px 2px 20px;
+  }
+
+  .auth-logo,
+  .auth-panel.signup-mode .auth-logo {
+    width: min(150px, 52vw);
+    height: 100px;
+  }
+}
+
+@media (max-width: 430px) {
+  .app {
+    width: min(100% - 12px, 920px);
+    padding-top: 10px;
+  }
+
+  .hero-card {
+    grid-template-columns: 1fr 58px;
+    padding: 14px;
+  }
+
+  .progress-ring {
+    width: 58px;
+    height: 58px;
+  }
+
+  .progress-ring span {
+    font-size: .9rem;
+  }
+
+  .task-input-toolbar,
+  .search-card {
+    grid-template-columns: 1fr;
+  }
+
+  .task-input-toolbar #addTaskButton,
+  .search-card #searchInput {
+    grid-column: auto;
+  }
+
+  .recurrence-toggle {
+    justify-content: center;
+  }
+
+  .week-calendar-header {
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+  }
+
+  .home-calendar-tabs {
+    grid-column: 1 / -1;
+  }
+
+  .today-button {
+    grid-column: 1 / -1;
+  }
+
+  .week-day {
+    min-height: 56px;
+    border-radius: 10px;
+  }
+
+  .week-day span {
+    font-size: 8px;
+  }
+
+  .home-month-day {
+    min-height: 34px;
+  }
+
+  .task-item {
+    grid-template-columns: auto minmax(0, 1fr) repeat(3, 32px);
+    align-items: start;
+  }
+
+  .task-content {
+    grid-column: 2 / -1;
+  }
+
+  .edit-button,
+  .notes-button,
+  .delete-button {
+    grid-row: 2;
+  }
+
+  .edit-button {
+    grid-column: 3;
+  }
+
+  .notes-button {
+    grid-column: 4;
+  }
+
+  .delete-button {
+    grid-column: 5;
+  }
+
+  .auth-panel {
+    padding: 12px 10px;
+  }
+
+  .auth-brand-lockup {
+    margin-top: 4px;
+    margin-bottom: 10px;
+  }
+
+  .auth-body,
+  .auth-panel.signup-mode .auth-body {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .auth-social-buttons {
+    gap: 6px;
+  }
+
+  .settings-dropdown {
+    top: 58px;
+    right: 6px;
+    left: 6px;
+    max-height: calc(100dvh - 66px);
+  }
 }
 
 .floating-settings-button:hover {

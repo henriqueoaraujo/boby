@@ -15,9 +15,10 @@ import {
   logout,
   toggleSettingsMenu,
   toggleSettingsSection,
+  toggleSecuritySubsection,
   updatePreference
 } from "./ui/settings.js";
-import { runGreetingAnimation, runHeadlineAnimation } from "./ui/animations.js";
+import { resetGreetingAnimation, runGreetingAnimation, runHeadlineAnimation } from "./ui/animations.js";
 import {
   initializeAuth,
   loadAuthProviderAvailability,
@@ -172,6 +173,14 @@ dom.securityToggle.addEventListener("click", () => {
   toggleSettingsSection(dom.securityToggle, dom.securityContent);
 });
 
+dom.passwordSettingsToggle.addEventListener("click", () => {
+  toggleSecuritySubsection(dom.passwordSettingsToggle, dom.passwordSettingsContent);
+});
+
+dom.deleteAccountSettingsToggle.addEventListener("click", () => {
+  toggleSecuritySubsection(dom.deleteAccountSettingsToggle, dom.deleteAccountSettingsContent);
+});
+
 dom.appearanceToggle.addEventListener("click", () => {
   toggleSettingsSection(dom.appearanceToggle, dom.appearanceContent);
 });
@@ -186,6 +195,7 @@ dom.suggestionsToggle.addEventListener("click", () => {
 
 dom.logoutButton.addEventListener("click", async () => {
   setAuthStatus("");
+  resetAuthenticatedAppRuntime();
   await signOut();
   renderAuthState();
   closeSettingsMenu();
@@ -716,7 +726,7 @@ async function reloadDataFromActiveStorage() {
   renderWeekCalendar();
   renderTasks();
   initializeReminders();
-  await initializeWeather();
+  initializeWeather();
   createAutomaticSnapshot();
 
   if (state.session.isAuthenticated) {
@@ -728,18 +738,33 @@ async function reloadDataFromActiveStorage() {
 
 let authenticatedAppInitialized = false;
 let authListenerInitialized = false;
+let loginAnimationTimer = 0;
+
+function resetAuthenticatedAppRuntime() {
+  authenticatedAppInitialized = false;
+  window.clearTimeout(loginAnimationTimer);
+  resetGreetingAnimation();
+}
+
+function scheduleLoginAnimations() {
+  window.clearTimeout(loginAnimationTimer);
+  loginAnimationTimer = window.setTimeout(() => {
+    if (!state.session.isAuthenticated) return;
+    runGreetingAnimation();
+    runHeadlineAnimation();
+  }, 2000);
+}
 
 async function initializeAuthenticatedApp() {
   if (!state.session.isAuthenticated) return;
 
-  await reloadDataFromActiveStorage();
-  await flushPendingSync();
-
   if (!authenticatedAppInitialized) {
     authenticatedAppInitialized = true;
-    runGreetingAnimation();
-    runHeadlineAnimation();
+    scheduleLoginAnimations();
   }
+
+  await reloadDataFromActiveStorage();
+  await flushPendingSync();
 }
 
 async function flushPendingSync() {
@@ -755,6 +780,7 @@ async function initializeAuthListener() {
 
   await onAuthChange(async () => {
     renderAuthState();
+    if (!state.session.isAuthenticated) resetAuthenticatedAppRuntime();
     await initializeAuthenticatedApp();
   });
 }

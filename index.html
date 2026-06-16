@@ -12,6 +12,8 @@
   <meta name="theme-color" content="#F2EDDF" />
 
   <!-- PWA -->
+  <link rel="icon" type="image/png" sizes="180x180" href="%BASE_URL%apple-touch-icon-180x180.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="%BASE_URL%apple-touch-icon-180x180.png" />
   <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
 
   <!-- Estilos -->
@@ -77,41 +79,51 @@
 
     <div class="settings-content" id="securityContent">
       <div class="settings-content-inner">
-        <div class="profile-security">
-          <strong>Trocar senha</strong>
-          <label>
-            <span>Senha atual</span>
-            <input id="profileCurrentPasswordInput" type="password" autocomplete="current-password" />
-          </label>
-          <label>
-            <span>Nova senha</span>
-            <input id="profilePasswordInput" type="password" autocomplete="new-password" />
-          </label>
-          <label>
-            <span>Confirmar nova senha</span>
-            <input id="profileConfirmPasswordInput" type="password" autocomplete="new-password" />
-          </label>
-          <button class="mini-action-button" id="updatePasswordButton" type="button">
-            Alterar senha
+        <div class="profile-security security-subsection">
+          <button class="security-subsection-title" id="passwordSettingsToggle" type="button" aria-expanded="false" aria-controls="passwordSettingsContent">
+            <span>Trocar senha</span>
+            <i aria-hidden="true">⌄</i>
           </button>
-          <button class="mini-action-button" id="sendRecoveryButton" type="button">
-            Enviar link de recuperação
-          </button>
+          <div class="security-subsection-content" id="passwordSettingsContent">
+            <label>
+              <span>Senha atual</span>
+              <input id="profileCurrentPasswordInput" type="password" autocomplete="current-password" />
+            </label>
+            <label>
+              <span>Nova senha</span>
+              <input id="profilePasswordInput" type="password" autocomplete="new-password" />
+            </label>
+            <label>
+              <span>Confirmar nova senha</span>
+              <input id="profileConfirmPasswordInput" type="password" autocomplete="new-password" />
+            </label>
+            <button class="mini-action-button" id="updatePasswordButton" type="button">
+              Alterar senha
+            </button>
+            <button class="mini-action-button" id="sendRecoveryButton" type="button">
+              Enviar link de recuperação
+            </button>
+          </div>
         </div>
-        <div class="profile-security danger-zone">
-          <strong id="deleteAccountTitle">Excluir conta</strong>
-          <p id="deleteAccountHelp">Remove permanentemente a conta, tarefas e categorias sincronizadas.</p>
-          <label>
-            <span id="deleteAccountPasswordLabel">Senha atual</span>
-            <input id="deleteAccountPasswordInput" type="password" autocomplete="current-password" />
-          </label>
-          <label>
-            <span id="deleteAccountConfirmationLabel">Digite EXCLUIR para confirmar</span>
-            <input id="deleteAccountConfirmationInput" type="text" autocomplete="off" />
-          </label>
-          <button class="mini-action-button danger-button" id="deleteAccountButton" type="button">
-            Excluir minha conta
+        <div class="profile-security danger-zone security-subsection">
+          <button class="security-subsection-title" id="deleteAccountSettingsToggle" type="button" aria-expanded="false" aria-controls="deleteAccountSettingsContent">
+            <span id="deleteAccountTitle">Excluir conta</span>
+            <i aria-hidden="true">⌄</i>
           </button>
+          <div class="security-subsection-content" id="deleteAccountSettingsContent">
+            <p id="deleteAccountHelp">Remove permanentemente a conta, tarefas e categorias sincronizadas.</p>
+            <label>
+              <span id="deleteAccountPasswordLabel">Senha atual</span>
+              <input id="deleteAccountPasswordInput" type="password" autocomplete="current-password" />
+            </label>
+            <label>
+              <span id="deleteAccountConfirmationLabel">Digite EXCLUIR para confirmar</span>
+              <input id="deleteAccountConfirmationInput" type="text" autocomplete="off" />
+            </label>
+            <button class="mini-action-button danger-button" id="deleteAccountButton" type="button">
+              Excluir minha conta
+            </button>
+          </div>
         </div>
         <p class="profile-status" id="securityStatus" role="status" aria-live="polite"></p>
       </div>
@@ -269,6 +281,33 @@
       </div>
     </section>
 
+    <section class="week-calendar-card" aria-label="Agenda">
+      <header class="week-calendar-header">
+        <button class="calendar-nav-button" id="previousWeekButton" type="button" aria-label="Período anterior">‹</button>
+        <button class="week-calendar-title" id="openCalendarButton" type="button">
+          <strong id="weekRangeLabel"></strong>
+        </button>
+        <button class="calendar-nav-button" id="nextWeekButton" type="button" aria-label="Próximo período">›</button>
+        <button class="today-button" id="goToTodayButton" type="button">Hoje</button>
+        <div class="home-calendar-tabs" role="group" aria-label="Visualização da agenda">
+          <button id="dayAgendaViewButton" type="button">Dia</button>
+          <button class="active" id="weekAgendaViewButton" type="button">Semana</button>
+          <button id="monthAgendaViewButton" type="button">Mês</button>
+        </div>
+      </header>
+      <div class="home-calendar-content">
+        <div class="home-day-view" id="homeDayView" hidden></div>
+        <div class="week-days" id="weekDays"></div>
+        <div class="home-month-view" id="homeMonthView" hidden>
+          <div class="home-month-weekdays" aria-hidden="true">
+            <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span>
+            <span>Sex</span><span>Sáb</span><span>Dom</span>
+          </div>
+          <div class="home-month-grid" id="homeMonthGrid"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Formulário de nova tarefa -->
     <section class="input-card collapsed" id="inputCard">
       <input id="taskInput" type="text" maxlength="200" placeholder="Adicionar nova atividade..." />
@@ -350,31 +389,6 @@
       <div class="assistant-command-row">
         <input id="assistantCommandInput" type="text" placeholder="Diga ao Boby o que fazer..." />
         <button id="runAssistantCommandButton" type="button">Executar</button>
-      </div>
-    </section>
-
-    <section class="week-calendar-card" aria-label="Agenda">
-      <header class="week-calendar-header">
-        <button class="calendar-nav-button" id="previousWeekButton" type="button" aria-label="Período anterior">‹</button>
-        <button class="week-calendar-title" id="openCalendarButton" type="button">
-          <strong id="weekRangeLabel"></strong>
-        </button>
-        <button class="calendar-nav-button" id="nextWeekButton" type="button" aria-label="Próximo período">›</button>
-        <button class="today-button" id="goToTodayButton" type="button">Hoje</button>
-        <div class="home-calendar-tabs" role="group" aria-label="Visualização da agenda">
-          <button id="dayAgendaViewButton" type="button">Dia</button>
-          <button class="active" id="weekAgendaViewButton" type="button">Semana</button>
-          <button id="monthAgendaViewButton" type="button">Mês</button>
-        </div>
-      </header>
-      <div class="home-day-view" id="homeDayView" hidden></div>
-      <div class="week-days" id="weekDays"></div>
-      <div class="home-month-view" id="homeMonthView" hidden>
-        <div class="home-month-weekdays" aria-hidden="true">
-          <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span>
-          <span>Sex</span><span>Sáb</span><span>Dom</span>
-        </div>
-        <div class="home-month-grid" id="homeMonthGrid"></div>
       </div>
     </section>
 

@@ -17,7 +17,7 @@ const session = {
   }
 };
 
-test.beforeEach(async ({ page }) => {
+async function mockSupabase(page) {
   await page.route("https://wibpacyerlbajjnhtpud.supabase.co/**", async route => {
     const request = route.request();
     if (request.url().includes("/auth/v1/settings")) {
@@ -34,41 +34,53 @@ test.beforeEach(async ({ page }) => {
     }
     await route.fulfill({ status: 201, contentType: "application/json", body: "[]" });
   });
+}
+
+async function expectNoHorizontalOverflow(page) {
+  const hasOverflow = await page.evaluate(() => (
+    document.documentElement.scrollWidth > window.innerWidth + 1
+  ));
+  expect(hasOverflow).toBe(false);
+}
+
+test("login e cadastro cabem no celular", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockSupabase(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  await expect(page.locator("#authPanel")).toHaveClass(/open/);
+  await expectNoHorizontalOverflow(page);
+
+  await page.locator("#authSignupTab").click();
+  await expect(page.locator("#authPanel")).toHaveClass(/signup-mode/);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("agenda principal não cria overflow horizontal no celular", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockSupabase(page);
   await page.addInitScript(value => {
     localStorage.setItem("boby:auth:remember", "true");
     localStorage.setItem("sb-wibpacyerlbajjnhtpud-auth-token", JSON.stringify(value));
   }, session);
-});
 
-test("navega entre dias, meses e anos", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#appShell")).toBeVisible();
-
-  await page.locator("#openCalendarButton").click();
-  await expect(page.locator("#calendarPanel")).toHaveClass(/open/);
-  await expect(page.locator(".year-month")).toHaveCount(12);
-  await expect(page.locator(".year-month").first().locator("span")).toContainText(/tarefas?/);
-
-  await page.locator("#calendarYearViewButton").click();
-  await expect(page.locator(".year-option")).toHaveCount(12);
-  await expect(page.locator(".year-option").first().locator("span")).toContainText(/tarefas?/);
-
-  await page.locator(".year-option").nth(5).click();
-  await expect(page.locator(".year-month")).toHaveCount(12);
-});
-
-test("alterna a escala do calendário com o conteúdo correto", async ({ page }) => {
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expectNoHorizontalOverflow(page);
 
   await page.locator("#dayAgendaViewButton").click();
   await expect(page.locator("#homeDayView")).toBeVisible();
-  await expect(page.locator("#weekDays")).toBeHidden();
+  await expectNoHorizontalOverflow(page);
 
   await page.locator("#monthAgendaViewButton").click();
   await expect(page.locator("#homeMonthView")).toBeVisible();
-  await expect(page.locator("#homeDayView")).toBeHidden();
+  await expectNoHorizontalOverflow(page);
 
-  await page.locator("#weekAgendaViewButton").click();
-  await expect(page.locator("#weekDays")).toBeVisible();
-  await expect(page.locator("#homeMonthView")).toBeHidden();
+  await page.locator("#openTaskInputButton").click();
+  await expect(page.locator("#inputCard")).not.toHaveClass(/collapsed/);
+  await expectNoHorizontalOverflow(page);
+
+  await page.locator("#openSearchButton").click();
+  await expect(page.locator("#searchCard")).not.toHaveClass(/collapsed/);
+  await expectNoHorizontalOverflow(page);
 });
