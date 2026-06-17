@@ -153,9 +153,6 @@ dom.taskInput.addEventListener("keydown", event => {
 
 dom.openTaskInputButton.addEventListener("click", toggleTaskInput);
 
-loadPomodoroSettingsControls();
-setPomodoroMode(activePomodoroMode);
-
 dom.openSearchButton.addEventListener("click", toggleSearchInput);
 
 dom.searchInput.addEventListener("input", event => {
@@ -792,14 +789,18 @@ function clampNumber(value, min, max, fallback = min) {
 }
 
 function normalizePomodoroSettings(settings) {
+  const safeSettings = settings && typeof settings === "object"
+    ? settings
+    : DEFAULT_POMODORO_SETTINGS;
+
   return {
-    focusMinutes: clampNumber(settings.focusMinutes, 1, 180, DEFAULT_POMODORO_SETTINGS.focusMinutes),
-    shortBreakMinutes: clampNumber(settings.shortBreakMinutes, 1, 60, DEFAULT_POMODORO_SETTINGS.shortBreakMinutes),
-    longBreakMinutes: clampNumber(settings.longBreakMinutes, 1, 120, DEFAULT_POMODORO_SETTINGS.longBreakMinutes),
-    sound: ["pomodoro", "focus-pop", "soft-bell", "double-tap", "rise", "calm"].includes(settings.sound)
-      ? settings.sound
+    focusMinutes: clampNumber(safeSettings.focusMinutes, 1, 180, DEFAULT_POMODORO_SETTINGS.focusMinutes),
+    shortBreakMinutes: clampNumber(safeSettings.shortBreakMinutes, 1, 60, DEFAULT_POMODORO_SETTINGS.shortBreakMinutes),
+    longBreakMinutes: clampNumber(safeSettings.longBreakMinutes, 1, 120, DEFAULT_POMODORO_SETTINGS.longBreakMinutes),
+    sound: ["pomodoro", "focus-pop", "soft-bell", "double-tap", "rise", "calm"].includes(safeSettings.sound)
+      ? safeSettings.sound
       : DEFAULT_POMODORO_SETTINGS.sound,
-    volume: clampNumber(settings.volume, 0, 100, DEFAULT_POMODORO_SETTINGS.volume)
+    volume: clampNumber(safeSettings.volume, 0, 100, DEFAULT_POMODORO_SETTINGS.volume)
   };
 }
 
@@ -961,6 +962,9 @@ function notifyPomodoroDone() {
     tag: "boby-pomodoro"
   });
 }
+
+loadPomodoroSettingsControls();
+setPomodoroMode(activePomodoroMode);
 
 async function reloadDataFromActiveStorage() {
   if (!state.session.isAuthenticated) return;

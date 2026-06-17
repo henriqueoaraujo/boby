@@ -1,4 +1,4 @@
-const CACHE_NAME = "boby-v56-motion-calendar-3";
+const CACHE_NAME = "boby-v56-pomodoro-fix-1";
 const APP_SHELL = [
   "./",
   "./index.html",
