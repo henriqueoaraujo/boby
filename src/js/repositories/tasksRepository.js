@@ -37,6 +37,43 @@ function normalizeStoredTasks(savedTasks) {
   });
 }
 
+function getTaskTimestamp(task) {
+  const timestamp = Date.parse(task.updatedAt || task.createdAt || "");
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+export function mergeTaskSnapshots(remoteTasks, cachedTasks, pendingOperations = []) {
+  const merged = new Map();
+
+  remoteTasks.forEach(task => {
+    merged.set(task.id, task);
+  });
+
+  cachedTasks.forEach(task => {
+    const savedTask = merged.get(task.id);
+    if (!savedTask || getTaskTimestamp(task) >= getTaskTimestamp(savedTask)) {
+      merged.set(task.id, task);
+    }
+  });
+
+  pendingOperations
+    .filter(item => item.resource === "task")
+    .forEach(operation => {
+      if (operation.action === "delete") {
+        merged.delete(operation.entityId);
+        return;
+      }
+
+      if (operation.payload) {
+        merged.set(operation.entityId, normalizeTask(operation.payload, state.categories));
+      }
+    });
+
+  return [...merged.values()].sort((a, b) => {
+    return a.position - b.position || getTaskTimestamp(a) - getTaskTimestamp(b);
+  });
+}
+
 function mapSupabaseTask(row, index) {
   return normalizeTask({
     id: row.id,
@@ -136,8 +173,9 @@ export async function loadTasks() {
 
   const remoteTasks = data.map(mapSupabaseTask);
   const cachedTasks = normalizeStoredTasks(loadData(getTasksStorageKey(), []));
+  const pendingOperations = readSyncQueue(state.session.user.id);
 
-  state.tasks = remoteTasks.length ? remoteTasks : cachedTasks;
+  state.tasks = mergeTaskSnapshots(remoteTasks, cachedTasks, pendingOperations);
   persistLocalTasks();
 
   if (!remoteTasks.length && cachedTasks.length) {

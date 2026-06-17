@@ -90,6 +90,15 @@ export async function loadCategories() {
   }
 
   const remoteCategories = data.map(mapSupabaseCategory);
+  const pendingCategories = readSyncQueue(state.session.user.id)
+    .find(item => item.resource === "categories" && item.action === "replace");
+
+  if (pendingCategories?.payload?.length) {
+    state.categories = normalizeCategories(pendingCategories.payload);
+    state.draftCategories = [...state.categories];
+    persistLocalCategories();
+    return state.categories;
+  }
 
   if (!remoteCategories.length) {
     state.categories = [...DEFAULT_CATEGORIES];
