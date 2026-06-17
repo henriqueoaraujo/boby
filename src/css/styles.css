@@ -4619,7 +4619,6 @@ body {
   height: 30px;
 }
 
-
 /* =========================================================
    AJUSTES V50
    ========================================================= */
@@ -4804,4 +4803,1142 @@ body {
 .note-checklist-item span {
   min-width: 120px;
   outline: none;
+}
+
+/* =========================================================
+   REFINOS V1.05.1 — camada final
+   ========================================================= */
+
+body.auth-booting .protected-app {
+  min-height: 100dvh;
+  filter: blur(10px);
+  transform: scale(.992);
+  opacity: .42 !important;
+  visibility: visible !important;
+}
+
+.profile-security .mini-action-button,
+.security-subsection-content .mini-action-button,
+#updatePasswordButton,
+#sendRecoveryButton,
+#deleteAccountButton {
+  width: fit-content;
+  min-width: 118px;
+  min-height: 34px;
+  justify-self: start;
+  padding: 0 14px;
+  border-radius: 11px;
+  font-size: .76rem;
+}
+
+.task-edit-actions .confirm-cancel-button,
+.task-edit-actions .task-edit-save,
+.confirm-actions .confirm-cancel-button,
+.confirm-actions .confirm-delete-button {
+  min-height: 42px;
+  border-radius: 14px;
+  padding: 0 18px;
+  font-weight: 750;
+}
+
+.task-edit-actions .confirm-cancel-button {
+  color: var(--muted);
+  border: 1px solid var(--line) !important;
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+
+.task-edit-actions .confirm-cancel-button:hover,
+.task-edit-actions .confirm-cancel-button:focus-visible {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--progress-color), transparent 55%) !important;
+  background: var(--accent-soft);
+}
+
+.notes-editor {
+  font-size: 16px;
+}
+
+.notes-editor span[style*="font-size"] {
+  line-height: 1.35;
+}
+
+.note-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  min-height: 28px;
+  margin: 4px 0;
+  user-select: text;
+  vertical-align: initial;
+}
+
+.note-checklist-item input,
+.note-checklist-checkbox {
+  flex: 0 0 auto;
+  width: 18px !important;
+  min-width: 18px;
+  height: 18px !important;
+  min-height: 18px !important;
+  margin: .18em 0 0;
+  padding: 0;
+  accent-color: var(--checkbox-color);
+  cursor: pointer;
+}
+
+.note-checklist-item span {
+  flex: 1 1 auto;
+  min-width: 0;
+  outline: none;
+  line-height: 1.45;
+  cursor: text;
+  user-select: text;
+}
+
+.note-checklist-item span:empty::before {
+  content: attr(data-placeholder);
+  color: var(--placeholder);
+}
+
+@media (max-width: 720px) {
+  .hero-card {
+    min-height: 112px;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .assistant-line {
+    min-height: 1.05rem;
+    font-size: .82rem;
+  }
+
+  .headline-line {
+    margin-top: 6px;
+    font-size: clamp(.98rem, 4.4vw, 1.26rem);
+    line-height: 1.05;
+    letter-spacing: -.045em;
+  }
+
+  .hero-card.greeting-finished .hero-copy {
+    transform: translateY(-3px);
+  }
+
+  .home-month-day {
+    position: relative;
+    place-content: start center;
+    gap: 2px;
+    padding-top: 5px;
+  }
+
+  .home-month-day .calendar-task-dot,
+  .calendar-day .calendar-task-dot {
+    transform: translateY(-3px);
+  }
+
+  .task-check {
+    width: 22px;
+    height: 22px;
+  }
+
+  .edit-button,
+  .notes-button,
+  .delete-button {
+    width: 61px;
+    height: 61px;
+    min-height: 61px;
+    border-radius: 18px;
+    font-size: 1.8rem;
+  }
+
+  .notes-button {
+    font-size: 1.95rem;
+  }
+
+  .delete-button {
+    font-size: 2.25rem;
+  }
+
+  .task-edit-actions .confirm-cancel-button,
+  .task-edit-actions .task-edit-save {
+    flex: 1 1 auto;
+    min-height: 42px;
+  }
+
+  .profile-security .mini-action-button,
+  .security-subsection-content .mini-action-button,
+  #updatePasswordButton,
+  #sendRecoveryButton,
+  #deleteAccountButton {
+    min-width: 104px;
+    min-height: 32px;
+    padding: 0 12px;
+  }
+}
+
+@media (max-width: 430px) {
+  .hero-card {
+    grid-template-columns: minmax(0, 1fr) 52px;
+    min-height: 98px;
+  }
+
+  .headline-line {
+    font-size: clamp(.92rem, 4.1vw, 1.12rem);
+  }
+
+  .progress-ring {
+    width: 52px;
+    height: 52px;
+  }
+
+  .edit-button,
+  .notes-button,
+  .delete-button {
+    width: 58px;
+    height: 58px;
+    min-height: 58px;
+  }
+}
+
+/* =========================================================
+   REFINOS V1.05.2
+   ========================================================= */
+
+.week-calendar-title,
+.calendar-header {
+  text-transform: none;
+}
+
+.notification-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-menu-button small {
+  min-width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--danger);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.notification-menu-button small[hidden] {
+  display: none;
+}
+
+.recurrence-options {
+  gap: 11px;
+  padding: 14px;
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.22), transparent 46%),
+    var(--surface);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.recurrence-mode-tabs {
+  --recurrence-mode-index: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 3px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  isolation: isolate;
+}
+
+.recurrence-mode-tabs::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 2);
+  border-radius: 11px;
+  background: var(--progress-color);
+  transform: translateX(calc(var(--recurrence-mode-index) * 100%));
+  transition: transform .28s cubic-bezier(.22, 1, .36, 1);
+}
+
+.recurrence-mode-tabs label {
+  position: relative;
+  z-index: 1;
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.recurrence-mode-tabs label:has(input:checked) {
+  color: #fff;
+}
+
+.recurrence-mode-tabs input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.recurrence-options fieldset {
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--accent-soft);
+}
+
+.recurrence-options legend {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.recurrence-presets,
+.weekday-options {
+  gap: 7px;
+}
+
+.recurrence-presets button,
+.weekday-options label,
+.monthly-day-field {
+  border-radius: 12px;
+}
+
+.monthly-day-field input {
+  min-height: 42px;
+}
+
+.task-reminder,
+.task-location {
+  width: fit-content;
+  padding: 0 8px;
+  color: color-mix(in srgb, var(--muted), transparent 12%);
+  font-size: .76rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -.004em;
+  border-left: 1px solid var(--line);
+}
+
+.task-edit-extra-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.task-extra-toggle {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  color: var(--muted);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.18), transparent 45%),
+    var(--surface);
+  font-size: .84rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease;
+}
+
+.task-extra-toggle:hover,
+.task-extra-toggle:focus-visible,
+.task-extra-toggle.active {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--progress-color), transparent 45%);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+.task-extra-toggle.active {
+  color: #fff;
+  background: var(--progress-color);
+}
+
+.task-extra-field input {
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.notes-toolbar select#notesLineHeight {
+  min-width: 86px;
+}
+
+.notifications-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 135;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(34, 24, 16, 0);
+  transition: opacity .24s ease, background .24s ease, visibility .24s ease;
+}
+
+.notifications-panel.open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(34, 24, 16, .34);
+}
+
+.notifications-card {
+  width: min(440px, 100%);
+  max-height: min(680px, calc(100dvh - 36px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--line), var(--accent) 16%);
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.18), transparent 42%),
+    var(--surface);
+  box-shadow: 0 22px 70px rgba(34, 24, 16, .2), var(--shadow);
+  transform: translateY(14px) scale(.97);
+  transition: transform .32s cubic-bezier(.22, 1, .36, 1);
+}
+
+.notifications-panel.open .notifications-card {
+  transform: translateY(0) scale(1);
+}
+
+.notifications-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.notifications-header strong {
+  display: block;
+  font-size: 1.08rem;
+  letter-spacing: -.025em;
+}
+
+.notifications-header p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+.notifications-close-button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--muted);
+  background: var(--accent-soft);
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.notifications-list {
+  display: grid;
+  gap: 9px;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.notification-item {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--surface-strong);
+}
+
+.notification-item span {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--progress-color);
+  background: color-mix(in srgb, var(--progress-color), transparent 88%);
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+.notification-item.now span,
+.notification-item.overdue span {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger), transparent 88%);
+}
+
+.notification-item strong {
+  font-size: .95rem;
+}
+
+.notification-item p,
+.notifications-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.45;
+}
+
+.page-notice {
+  position: fixed;
+  right: max(18px, calc((100vw - 920px) / 2 - 150px));
+  bottom: 22px;
+  z-index: 160;
+  width: min(390px, calc(100vw - 28px));
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto 34px;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--line), var(--accent) 18%);
+  border-radius: 22px;
+  color: var(--text);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.24), transparent 46%),
+    var(--surface);
+  box-shadow: 0 18px 52px rgba(63, 43, 27, .18), var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px) scale(.97);
+  transition: opacity .22s ease, visibility .22s ease, transform .28s cubic-bezier(.22, 1, .36, 1);
+}
+
+.page-notice.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.page-notice-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 50% 38%, var(--progress-color) 0 4px, transparent 5px),
+    linear-gradient(var(--progress-color), var(--progress-color)) 50% 45% / 16px 14px no-repeat,
+    color-mix(in srgb, var(--progress-color), transparent 84%);
+}
+
+.page-notice[data-type="pomodoro"] .page-notice-icon {
+  background:
+    radial-gradient(circle at 50% 55%, transparent 0 7px, var(--progress-color) 8px 10px, transparent 11px),
+    linear-gradient(var(--progress-color), var(--progress-color)) 50% 52% / 3px 14px no-repeat,
+    linear-gradient(45deg, transparent 48%, var(--progress-color) 49% 53%, transparent 54%) 55% 59% / 18px 18px no-repeat,
+    color-mix(in srgb, var(--progress-color), transparent 84%);
+}
+
+.page-notice[data-type="overdue"] .page-notice-icon {
+  background:
+    radial-gradient(circle at 50% 38%, var(--danger) 0 4px, transparent 5px),
+    linear-gradient(var(--danger), var(--danger)) 50% 45% / 16px 14px no-repeat,
+    color-mix(in srgb, var(--danger), transparent 86%);
+}
+
+.page-notice-copy {
+  min-width: 0;
+}
+
+.page-notice-copy strong {
+  display: block;
+  font-size: .9rem;
+  letter-spacing: -.018em;
+}
+
+.page-notice-copy p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
+.page-notice-action,
+.page-notice-close {
+  border: 0;
+  cursor: pointer;
+}
+
+.page-notice-action {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--progress-color);
+  font-size: .72rem;
+  font-weight: 850;
+}
+
+.page-notice-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 13px;
+  color: var(--muted);
+  background: var(--accent-soft);
+  font-size: 1.15rem;
+}
+
+@media (max-width: 720px) {
+  .task-check {
+    border-radius: 4px;
+  }
+
+  .task-reminder,
+  .task-location {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    padding: 3px 7px;
+    border-left: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent), transparent 93%);
+    font-size: .68rem;
+  }
+
+  .task-edit-extra-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-panel {
+    align-items: flex-end;
+    padding: 10px;
+  }
+
+  .notifications-card {
+    max-height: 82dvh;
+    border-radius: 24px 24px 18px 18px;
+  }
+
+  .page-notice {
+    right: 10px;
+    bottom: 10px;
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    border-radius: 20px;
+  }
+
+  .page-notice-action {
+    grid-column: 2 / 3;
+    justify-self: start;
+  }
+
+  .page-notice-close {
+    grid-column: 3 / 4;
+    grid-row: 1 / 2;
+  }
+}
+
+/* =========================================================
+   BOTÕES FLUTUANTES E POMODORO
+   ========================================================= */
+
+.floating-tool-button {
+  position: fixed;
+  right: max(10px, calc((100vw - 920px) / 2 - 150px));
+  z-index: 75;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--line), var(--accent) 16%);
+  border-radius: 25px;
+  color: var(--text);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.22), transparent 48%),
+    var(--surface);
+  box-shadow: 0 12px 34px rgba(63, 43, 27, .12), var(--shadow);
+  cursor: pointer;
+  transition: transform .22s cubic-bezier(.22, 1, .36, 1), border-color .18s ease, background .18s ease;
+}
+
+.floating-tool-button:hover,
+.floating-tool-button:focus-visible {
+  border-color: color-mix(in srgb, var(--progress-color), transparent 45%);
+  background: var(--accent-soft);
+  transform: none;
+}
+
+.floating-alerts-button {
+  top: 90px;
+}
+
+.floating-pomodoro-button {
+  top: 148px;
+}
+
+.floating-alerts-button[hidden] + .floating-pomodoro-button {
+  top: 90px;
+}
+
+.floating-alerts-button small {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  color: #fff;
+  background: var(--danger);
+  font-size: .66rem;
+  font-weight: 850;
+}
+
+.floating-alerts-button small[hidden] {
+  display: none;
+}
+
+.alert-bell-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+}
+
+.floating-alerts-button:hover .alert-bell-icon,
+.floating-alerts-button:focus-visible .alert-bell-icon {
+  animation: bellNudge .44s cubic-bezier(.22, 1, .36, 1);
+}
+
+.pomodoro-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+}
+
+.floating-pomodoro-button:hover .pomodoro-icon,
+.floating-pomodoro-button:focus-visible .pomodoro-icon {
+  animation: pomodoroTick .44s cubic-bezier(.22, 1, .36, 1);
+}
+
+.floating-settings-button:hover {
+  transform: none;
+}
+
+@keyframes bellNudge {
+  0%, 100% { transform: rotate(0); }
+  28% { transform: rotate(-8deg); }
+  62% { transform: rotate(7deg); }
+}
+
+@keyframes pomodoroTick {
+  0%, 100% { transform: scale(1) rotate(0); }
+  45% { transform: scale(1.06) rotate(8deg); }
+}
+
+.pomodoro-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 136;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(34, 24, 16, 0);
+  transition: opacity .24s ease, background .24s ease, visibility .24s ease;
+}
+
+.pomodoro-panel.open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(34, 24, 16, .34);
+}
+
+.pomodoro-card {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 16px;
+  border: 1px solid color-mix(in srgb, var(--line), var(--accent) 16%);
+  border-radius: 30px;
+  padding: 20px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.18), transparent 42%),
+    var(--surface);
+  box-shadow: 0 22px 70px rgba(34, 24, 16, .2), var(--shadow);
+  transform: translateY(14px) scale(.97);
+  transition: transform .32s cubic-bezier(.22, 1, .36, 1);
+}
+
+.pomodoro-panel.open .pomodoro-card {
+  transform: translateY(0) scale(1);
+}
+
+.pomodoro-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.pomodoro-header strong {
+  display: block;
+  font-size: 1.1rem;
+  letter-spacing: -.025em;
+}
+
+.pomodoro-header p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
+.pomodoro-close-button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--muted);
+  background: var(--accent-soft);
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.pomodoro-timer {
+  display: grid;
+  place-items: center;
+  min-height: 140px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  color: var(--progress-color);
+  background: var(--accent-soft);
+  font-size: clamp(3.1rem, 10vw, 5rem);
+  font-weight: 850;
+  letter-spacing: -.07em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pomodoro-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pomodoro-settings {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.18), transparent 44%),
+    var(--accent-soft);
+}
+
+.pomodoro-settings[hidden] {
+  display: none;
+}
+
+.pomodoro-settings-grid,
+.pomodoro-sound-settings {
+  display: grid;
+  gap: 8px;
+}
+
+.pomodoro-settings-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pomodoro-sound-settings {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.pomodoro-settings label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+.pomodoro-settings input {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--text);
+  background: var(--surface-strong);
+  text-align: center;
+  font-weight: 850;
+}
+
+.pomodoro-settings select {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--text);
+  background: var(--surface-strong);
+  padding: 0 12px;
+  font-weight: 800;
+}
+
+.pomodoro-settings input[type="range"] {
+  padding: 0;
+  accent-color: var(--progress-color);
+}
+
+.pomodoro-settings input:disabled {
+  opacity: .58;
+  cursor: not-allowed;
+}
+
+.pomodoro-modes button,
+.pomodoro-actions button {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  background: var(--surface-strong);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pomodoro-modes button.active,
+.pomodoro-primary-button,
+.pomodoro-config-button.active {
+  color: #fff !important;
+  border-color: var(--progress-color) !important;
+  background: var(--progress-color) !important;
+}
+
+.pomodoro-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 9px;
+}
+
+.pomodoro-config-button {
+  padding: 0 14px;
+}
+
+.pomodoro-listen-button {
+  min-width: 74px;
+  min-height: 40px;
+  border: 1px solid color-mix(in srgb, var(--progress-color), transparent 48%);
+  border-radius: 14px;
+  color: var(--progress-color);
+  background: var(--surface);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .floating-tool-button {
+    right: 8px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+  }
+
+  .floating-alerts-button {
+    top: 62px;
+  }
+
+  .floating-pomodoro-button {
+    top: 116px;
+  }
+
+  .floating-alerts-button[hidden] + .floating-pomodoro-button {
+    top: 62px;
+  }
+
+  .pomodoro-panel {
+    align-items: flex-end;
+    padding: 10px;
+  }
+
+  .pomodoro-card {
+    border-radius: 24px 24px 18px 18px;
+  }
+
+  .pomodoro-settings {
+    grid-template-columns: 1fr;
+  }
+
+  .pomodoro-settings-grid,
+  .pomodoro-sound-settings,
+  .pomodoro-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .pomodoro-config-button,
+  .pomodoro-listen-button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   REFINO DE ALINHAMENTO DOS ÍCONES E RECORRÊNCIA
+   ========================================================= */
+
+.floating-settings-button,
+.floating-tool-button {
+  right: max(10px, calc((100vw - 920px) / 2 - 150px));
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 25px;
+}
+
+.floating-settings-button {
+  z-index: 76;
+}
+
+.floating-alerts-button {
+  top: 90px;
+}
+
+.floating-pomodoro-button {
+  top: 148px;
+}
+
+.settings-icon,
+.alert-bell-icon,
+.pomodoro-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  margin: auto;
+  object-fit: contain;
+  transform-origin: center;
+}
+
+.floating-tool-button:hover,
+.floating-tool-button:focus-visible,
+.floating-settings-button:hover,
+.floating-settings-button:focus-visible {
+  transform: none;
+}
+
+.recurrence-options {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 12px;
+}
+
+.recurrence-mode-tabs {
+  display: none;
+}
+
+.recurrence-range {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.recurrence-options fieldset {
+  display: grid;
+  gap: 9px;
+  padding: 10px;
+}
+
+.recurrence-presets {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.recurrence-presets button {
+  min-height: 34px;
+  padding: 0 8px;
+  font-size: .72rem;
+}
+
+.weekday-options {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.weekday-options label {
+  min-height: 34px;
+  justify-content: center;
+  padding: 0 7px;
+  font-size: .72rem;
+}
+
+.monthly-day-field {
+  display: grid;
+  grid-template-columns: auto minmax(72px, 92px) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.monthly-day-field span {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 850;
+}
+
+.monthly-day-field input {
+  width: 100%;
+  min-height: 34px;
+  border-radius: 11px;
+  text-align: center;
+}
+
+.monthly-day-field small {
+  color: var(--muted);
+  font-size: .7rem;
+  line-height: 1.2;
+}
+
+@media (max-width: 720px) {
+  .floating-settings-button,
+  .floating-tool-button {
+    right: 8px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+  }
+
+  .floating-alerts-button {
+    top: 62px;
+  }
+
+  .floating-pomodoro-button {
+    top: 116px;
+  }
+
+  .settings-icon,
+  .alert-bell-icon,
+  .pomodoro-icon {
+    width: 23px;
+    height: 23px;
+  }
+
+  .recurrence-range,
+  .recurrence-presets,
+  .weekday-options,
+  .monthly-day-field {
+    grid-template-columns: 1fr;
+  }
+
+  .monthly-day-field {
+    align-items: stretch;
+  }
 }

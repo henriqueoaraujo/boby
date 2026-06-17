@@ -17,6 +17,10 @@ let popupTransitionId = 0;
 const YEAR_PAGE_SIZE = 12;
 const HOME_VIEW_ORDER = { day: 0, week: 1, month: 2 };
 
+function capitalizeFirst(value) {
+  return value ? value.charAt(0).toLocaleUpperCase(getLocale()) + value.slice(1) : "";
+}
+
 function summarizeTasksByDate() {
   const summaries = new Map();
 
@@ -57,8 +61,8 @@ export function renderWeekCalendar() {
   });
 
   dom.weekRangeLabel.textContent = sameMonth
-    ? formatter.format(firstDate)
-    : `${formatter.format(firstDate)} – ${formatter.format(lastDate)}`;
+    ? capitalizeFirst(formatter.format(firstDate))
+    : `${capitalizeFirst(formatter.format(firstDate))} – ${capitalizeFirst(formatter.format(lastDate))}`;
   dom.weekDays.innerHTML = "";
 
   dates.forEach((date, index) => {
@@ -204,6 +208,8 @@ function createDayTask(task, showTime = false) {
   details.textContent = [
     showTime ? task.dueTime : "",
     task.category,
+    task.location ? `Local: ${task.location}` : "",
+    task.reminderAt ? `Aviso: ${task.reminderAt.split("T")[1]?.slice(0, 5) || ""}` : "",
     task.priority === "high" ? t("high") : "",
     task.completedAt
       ? t("completedAt", {
@@ -226,10 +232,10 @@ function renderHomeMonthCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const summaries = summarizeTasksByDate();
 
-  dom.weekRangeLabel.textContent = new Intl.DateTimeFormat(getLocale(), {
+  dom.weekRangeLabel.textContent = capitalizeFirst(new Intl.DateTimeFormat(getLocale(), {
     month: "long",
     year: "numeric"
-  }).format(selected);
+  }).format(selected));
   dom.homeMonthGrid.innerHTML = "";
 
   for (let index = 0; index < mondayFirstOffset; index++) {
@@ -348,10 +354,10 @@ function renderDaysCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const summaries = summarizeTasksByDate();
 
-  dom.calendarMonthLabel.textContent = new Intl.DateTimeFormat(getLocale(), {
+  dom.calendarMonthLabel.textContent = capitalizeFirst(new Intl.DateTimeFormat(getLocale(), {
     month: "long",
     year: "numeric"
-  }).format(visibleMonth);
+  }).format(visibleMonth));
   dom.calendarGrid.innerHTML = "";
 
   for (let index = 0; index < mondayFirstOffset; index++) {

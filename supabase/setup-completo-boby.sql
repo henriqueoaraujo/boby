@@ -34,6 +34,8 @@ create table if not exists public.tasks (
   category text,
   title text not null,
   notes text not null default '',
+  reminder_at timestamptz,
+  location text not null default '',
   priority text not null default 'normal',
   series_id uuid,
   original_due_date date,
@@ -50,6 +52,8 @@ create table if not exists public.tasks (
 -- Compatibilidade com bancos criados por versões antigas do Boby.
 alter table public.tasks add column if not exists category text;
 alter table public.tasks add column if not exists notes text not null default '';
+alter table public.tasks add column if not exists reminder_at timestamptz;
+alter table public.tasks add column if not exists location text not null default '';
 alter table public.tasks add column if not exists priority text not null default 'normal';
 alter table public.tasks add column if not exists series_id uuid;
 alter table public.tasks add column if not exists original_due_date date;

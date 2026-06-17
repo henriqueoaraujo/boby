@@ -21,6 +21,8 @@ create table if not exists public.tasks (
   category text,
   title text not null,
   notes text not null default '',
+  reminder_at timestamptz,
+  location text not null default '',
   priority text not null default 'normal'
     check (priority in ('low', 'normal', 'high')),
   series_id uuid,
@@ -57,6 +59,8 @@ check (priority in ('normal', 'high'));
 alter table public.tasks add column if not exists series_id uuid;
 alter table public.tasks add column if not exists original_due_date date;
 alter table public.tasks add column if not exists carried_at date;
+alter table public.tasks add column if not exists reminder_at timestamptz;
+alter table public.tasks add column if not exists location text not null default '';
 
 update public.tasks
 set due_date = current_date

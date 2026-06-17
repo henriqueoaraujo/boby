@@ -30,6 +30,15 @@
     <span class="settings-mobile-caret" aria-hidden="true">⌄</span>
   </button>
 
+  <button class="floating-tool-button floating-alerts-button protected-app" id="openNotificationsPanelButton" type="button" aria-label="Abrir alertas">
+    <img class="alert-bell-icon" src="src/assets/icons/notification-bell.svg" alt="" aria-hidden="true" />
+    <small id="notificationsMenuBadge">0</small>
+  </button>
+
+  <button class="floating-tool-button floating-pomodoro-button protected-app" id="openPomodoroPanelButton" type="button" aria-label="Abrir Pomodoro">
+    <img class="pomodoro-icon" src="src/assets/icons/pomodoro-stopwatch.svg" alt="" aria-hidden="true" />
+  </button>
+
   <!-- =====================================================
        MENU DROPDOWN DE CONFIGURAÇÕES
        ===================================================== -->
@@ -216,6 +225,18 @@
           </button>
         </div>
 
+        <div class="setting-row compact">
+          <div>
+            <strong>Bloquear notificações</strong>
+            <small>Oculta alertas e silencia atrasos.</small>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="blockNotificationsToggle" />
+            <span></span>
+          </label>
+        </div>
+
         <div class="data-management-card">
           <strong id="dataManagementTitle">Dados e backups</strong>
           <small id="dataManagementHelp">Exporte seus dados ou restaure um arquivo criado pelo Boby.</small>
@@ -346,7 +367,7 @@
           </label>
         </div>
 
-        <fieldset>
+        <fieldset id="recurrenceWeeklyPanel">
           <legend>Repetir nos dias</legend>
           <div class="recurrence-presets">
             <button type="button" data-weekday-preset="1,2,3,4,5">Seg–Sex</button>
@@ -364,7 +385,11 @@
             <label><input type="checkbox" name="recurrenceWeekday" value="6" /> Sáb</label>
             <label><input type="checkbox" name="recurrenceWeekday" value="0" /> Dom</label>
           </div>
-          <small>Nenhum dia marcado repete em todos os dias do intervalo.</small>
+          <label class="monthly-day-field" id="recurrenceMonthlyPanel">
+            <span>Todo dia</span>
+            <input id="recurrenceMonthlyDayInput" type="number" min="1" max="31" inputmode="numeric" />
+            <small>Opcional: repete também nesse dia de cada mês.</small>
+          </label>
         </fieldset>
         <p class="recurrence-summary" id="recurrenceSummary"></p>
       </div>
@@ -625,6 +650,25 @@
         </select>
       </label>
 
+      <div class="task-edit-extra-actions">
+        <button class="task-extra-toggle" id="toggleTaskReminderButton" type="button" aria-expanded="false">
+          Agendar notificação
+        </button>
+        <button class="task-extra-toggle" id="toggleTaskLocationButton" type="button" aria-expanded="false">
+          Incluir localização
+        </button>
+      </div>
+
+      <label class="task-extra-field" id="editTaskReminderField" hidden>
+        <span>Notificar em</span>
+        <input id="editTaskReminderAt" type="datetime-local" />
+      </label>
+
+      <label class="task-extra-field" id="editTaskLocationField" hidden>
+        <span>Local do compromisso</span>
+        <input id="editTaskLocation" type="text" maxlength="160" placeholder="Ex.: Rua, sala, link ou cidade" />
+      </label>
+
       <div class="task-edit-actions">
         <button class="confirm-cancel-button" id="cancelTaskEditButton" type="button">Cancelar</button>
         <button class="task-edit-save" type="submit">Salvar alterações</button>
@@ -651,6 +695,9 @@
         <button type="button" data-command="strikeThrough"><s>S</s></button>
         <button type="button" data-command="italic"><em>I</em></button>
         <button type="button" id="notesChecklistButton" aria-label="Adicionar checklist">☑</button>
+        <button type="button" data-command="justifyLeft" aria-label="Alinhar à esquerda">⇤</button>
+        <button type="button" data-command="justifyCenter" aria-label="Centralizar">↔</button>
+        <button type="button" data-command="justifyRight" aria-label="Alinhar à direita">⇥</button>
 
         <select id="notesFontName" aria-label="Fonte">
           <option value="Inter">Inter</option>
@@ -668,6 +715,14 @@
           <option value="24px">24 px</option>
           <option value="28px">28 px</option>
           <option value="32px">32 px</option>
+        </select>
+
+        <select id="notesLineHeight" aria-label="Espaçamento entre linhas">
+          <option value="1.15">1.15</option>
+          <option value="1.35">1.35</option>
+          <option value="1.55" selected>1.55</option>
+          <option value="1.8">1.8</option>
+          <option value="2">2.0</option>
         </select>
 
         <div class="notes-color-wrap">
@@ -691,6 +746,95 @@
         </div>
       </div>
     </div>
+  </aside>
+
+  <aside class="notifications-panel" id="notificationsPanel" aria-hidden="true">
+    <div class="notifications-card">
+      <div class="notifications-header">
+        <div>
+          <strong>Notificações</strong>
+          <p>Atividades atrasadas e avisos agendados.</p>
+        </div>
+        <button class="notifications-close-button" id="closeNotificationsPanelButton" type="button" aria-label="Fechar notificações">×</button>
+      </div>
+      <div class="notifications-list" id="notificationsList"></div>
+    </div>
+  </aside>
+
+  <aside class="pomodoro-panel" id="pomodoroPanel" aria-hidden="true">
+    <div class="pomodoro-card">
+      <div class="pomodoro-header">
+        <div>
+          <strong>Pomodoro</strong>
+          <p id="pomodoroStatusText">Foco por 25 minutos. Pausa sem culpa depois.</p>
+        </div>
+        <button class="pomodoro-close-button" id="closePomodoroPanelButton" type="button" aria-label="Fechar Pomodoro">×</button>
+      </div>
+
+      <div class="pomodoro-timer" id="pomodoroTimer">25:00</div>
+
+      <div class="pomodoro-modes" role="group" aria-label="Modo do Pomodoro">
+        <button class="active" id="pomodoroFocusButton" type="button" data-pomodoro-minutes="25">Foco</button>
+        <button id="pomodoroShortBreakButton" type="button" data-pomodoro-minutes="5">Pausa</button>
+        <button id="pomodoroLongBreakButton" type="button" data-pomodoro-minutes="15">Pausa longa</button>
+      </div>
+
+      <div class="pomodoro-actions">
+        <button class="pomodoro-primary-button" id="startPomodoroButton" type="button">Iniciar</button>
+        <button class="pomodoro-secondary-button" id="resetPomodoroButton" type="button">Reiniciar</button>
+        <button class="pomodoro-config-button" id="togglePomodoroSettingsButton" type="button" aria-expanded="false">
+          Configurações
+        </button>
+      </div>
+
+      <div class="pomodoro-settings" id="pomodoroSettingsPanel" aria-label="Configurar Pomodoro" hidden>
+        <div class="pomodoro-settings-grid">
+          <label>
+            <span>Foco</span>
+            <input id="pomodoroFocusMinutesInput" type="number" min="1" max="180" value="25" />
+          </label>
+          <label>
+            <span>Pausa</span>
+            <input id="pomodoroShortBreakMinutesInput" type="number" min="1" max="60" value="5" />
+          </label>
+          <label>
+            <span>Pausa longa</span>
+            <input id="pomodoroLongBreakMinutesInput" type="number" min="1" max="120" value="15" />
+          </label>
+        </div>
+
+        <div class="pomodoro-sound-settings">
+          <label>
+            <span>Toque</span>
+            <select id="pomodoroSoundSelect">
+              <option value="pomodoro">Clássico Boby</option>
+              <option value="focus-pop">Foco leve</option>
+              <option value="soft-bell">Sininho suave</option>
+              <option value="double-tap">Dois toques</option>
+              <option value="rise">Subida rápida</option>
+              <option value="calm">Calmo</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Volume</span>
+            <input id="pomodoroVolumeInput" type="range" min="0" max="100" value="70" />
+          </label>
+
+          <button class="pomodoro-listen-button" id="previewPomodoroSoundButton" type="button">Ouvir</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="page-notice" id="pageNotice" aria-hidden="true" aria-live="polite">
+    <div class="page-notice-icon" aria-hidden="true"></div>
+    <div class="page-notice-copy">
+      <strong id="pageNoticeTitle">Boby</strong>
+      <p id="pageNoticeMessage"></p>
+    </div>
+    <button class="page-notice-action" id="pageNoticeAction" type="button" hidden>Ver</button>
+    <button class="page-notice-close" id="closePageNoticeButton" type="button" aria-label="Fechar aviso">×</button>
   </aside>
 
   <!-- =====================================================

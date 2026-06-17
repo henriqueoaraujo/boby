@@ -213,6 +213,8 @@ export async function runGreetingAnimation() {
   await typeText(dom.greeting, getWeatherMessage());
   await wait(5000);
   if (runId !== greetingAnimationRunId) return;
+  await eraseText(dom.greeting);
+  if (runId !== greetingAnimationRunId) return;
 
   dom.assistantLine.classList.add("done");
   dom.assistantLine.closest(".hero-card")?.classList.add("greeting-finished");

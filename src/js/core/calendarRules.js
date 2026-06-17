@@ -30,28 +30,59 @@ export function getWeekDates(selectedDate) {
 export function generateOccurrenceDates({
   startDate,
   endDate,
-  weekdays
+  weekdays,
+  monthlyDay
 }) {
   if (!startDate) return [];
 
   const finalDate = endDate && endDate >= startDate ? endDate : startDate;
-  const selectedWeekdays = new Set(
-    Array.isArray(weekdays) ? weekdays.map(Number) : []
-  );
-  const dates = [];
+  const dates = new Set();
+  const selectedMonthlyDay = Number(monthlyDay);
+  const hasMonthlyRule = Number.isInteger(selectedMonthlyDay) && selectedMonthlyDay >= 1 && selectedMonthlyDay <= 31;
 
-  for (
-    let current = startDate;
-    current <= finalDate;
-    current = addDaysToKey(current, 1)
-  ) {
-    const weekday = fromDateKey(current).getDay();
-    if (!selectedWeekdays.size || selectedWeekdays.has(weekday)) {
-      dates.push(current);
+  if (hasMonthlyRule) {
+    const start = fromDateKey(startDate);
+    const end = fromDateKey(finalDate);
+    const cursor = new Date(start.getFullYear(), start.getMonth(), 1, 12);
+
+    while (cursor <= end) {
+      const year = cursor.getFullYear();
+      const month = cursor.getMonth();
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const day = Math.min(selectedMonthlyDay, lastDay);
+      const candidate = toDateKey(new Date(year, month, day, 12));
+
+      if (candidate >= startDate && candidate <= finalDate) dates.add(candidate);
+      cursor.setMonth(cursor.getMonth() + 1);
     }
   }
 
-  return dates;
+  const selectedWeekdays = new Set(
+    Array.isArray(weekdays) ? weekdays.map(Number) : []
+  );
+  const shouldUseWeeklyRule = selectedWeekdays.size > 0 || !hasMonthlyRule;
+
+  if (shouldUseWeeklyRule) {
+    for (
+      let current = startDate;
+      current <= finalDate;
+      current = addDaysToKey(current, 1)
+    ) {
+      const weekday = fromDateKey(current).getDay();
+      if (!selectedWeekdays.size || selectedWeekdays.has(weekday)) {
+        dates.add(current);
+      }
+    }
+  }
+
+  return [...dates].sort();
+}
+
+function carryReminderToDate(task, targetDate) {
+  if (!task.reminderAt || typeof task.reminderAt !== "string") return task.reminderAt || "";
+
+  const [, time = ""] = task.reminderAt.split("T");
+  return time ? `${targetDate}T${time.slice(0, 5)}` : "";
 }
 
 export function carryIncompleteTasks(tasks, targetDate) {
@@ -65,6 +96,7 @@ export function carryIncompleteTasks(tasks, targetDate) {
       ...task,
       originalDueDate: task.originalDueDate || task.dueDate,
       dueDate: targetDate,
+      reminderAt: carryReminderToDate(task, targetDate),
       carriedAt: targetDate,
       updatedAt: new Date().toISOString()
     };

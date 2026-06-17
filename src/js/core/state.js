@@ -13,7 +13,8 @@ export const DEFAULT_CATEGORIES = ["Trabalho", "Pessoal", "Estudos", "Outros"];
 export const DEFAULT_PREFERENCES = {
   hideCompleted: false,
   confirmDelete: false,
-  carryIncomplete: false
+  carryIncomplete: false,
+  blockNotifications: false
 };
 
 export const DEFAULT_SESSION = {
@@ -32,6 +33,20 @@ export function createId() {
 
 export function getNowIso() {
   return new Date().toISOString();
+}
+
+function normalizeReminderAt(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+
+  const trimmed = value.trim();
+
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) return trimmed;
+
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return offsetDate.toISOString().slice(0, 16);
 }
 
 export function normalizeCategories(savedCategories) {
@@ -92,6 +107,10 @@ export function normalizeTask(rawTask, categories, index = 0) {
     createdAt,
     updatedAt,
     notes: typeof rawTask?.notes === "string" ? rawTask.notes : "",
+    reminderAt: normalizeReminderAt(rawTask?.reminderAt || rawTask?.reminder_at),
+    location: typeof rawTask?.location === "string"
+      ? rawTask.location.trim().replace(/\s+/g, " ").slice(0, 160)
+      : "",
     priority: ["normal", "high"].includes(rawTask?.priority)
       ? rawTask.priority
       : "normal",
@@ -132,6 +151,8 @@ export const DEFAULT_TASKS = [
     createdAt: getNowIso(),
     updatedAt: getNowIso(),
     notes: "",
+    reminderAt: "",
+    location: "",
     priority: "normal",
     done: false,
     position: 0
@@ -146,6 +167,8 @@ export const DEFAULT_TASKS = [
     createdAt: getNowIso(),
     updatedAt: getNowIso(),
     notes: "",
+    reminderAt: "",
+    location: "",
     priority: "normal",
     done: false,
     position: 1
@@ -160,6 +183,8 @@ export const DEFAULT_TASKS = [
     createdAt: getNowIso(),
     updatedAt: getNowIso(),
     notes: "",
+    reminderAt: "",
+    location: "",
     priority: "normal",
     done: true,
     position: 2

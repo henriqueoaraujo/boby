@@ -82,9 +82,11 @@ import {
   closeTaskEditor,
   closeTaskEditorOnBackdrop,
   saveTaskEdits,
+  toggleTaskExtraField,
   setAgendaFilter,
   setDueDateFilter,
   toggleRecurrenceOptions,
+  updateRecurrenceMode,
   applyRecurrencePreset,
   updateRecurrenceSummary,
   carryIncompleteToDate
@@ -99,10 +101,15 @@ import {
 } from "./features/categories.js";
 import { runAssistantCommand } from "./features/assistant.js";
 import {
+  closeNotificationsPanel,
+  closeNotificationsPanelOnBackdrop,
   initializeReminders,
+  openNotificationsPanel,
+  renderNotificationsPanel,
   requestReminderPermission
 } from "./features/reminders.js";
 import { initializeSyncStatus, renderSyncStatus } from "./ui/syncStatus.js";
+import { alertUser, closePageNotice, playAlertSound, unlockAlertSound } from "./ui/pageAlerts.js";
 import {
   closeCalendar,
   closeCalendarOnBackdrop,
@@ -135,7 +142,7 @@ import {
   getLatestSnapshot,
   readBackupFile
 } from "./core/backup.js";
-import { saveData } from "./core/storage.js";
+import { loadData, saveData } from "./core/storage.js";
 import { initializeMonitoring, reportError } from "./core/monitoring.js";
 
 dom.addTaskButton.addEventListener("click", addTask);
@@ -145,6 +152,9 @@ dom.taskInput.addEventListener("keydown", event => {
 });
 
 dom.openTaskInputButton.addEventListener("click", toggleTaskInput);
+
+loadPomodoroSettingsControls();
+setPomodoroMode(activePomodoroMode);
 
 dom.openSearchButton.addEventListener("click", toggleSearchInput);
 
@@ -427,15 +437,44 @@ dom.carryIncompleteToggle.addEventListener("change", event => {
   }
 });
 
+dom.blockNotificationsToggle.addEventListener("change", event => {
+  updatePreference("blockNotifications", event.target.checked);
+  renderNotificationsPanel();
+});
+
+document.addEventListener("pointerdown", unlockAlertSound, { once: true });
 dom.enableNotificationsButton.addEventListener("click", requestReminderPermission);
+dom.closePageNoticeButton.addEventListener("click", closePageNotice);
+dom.openNotificationsPanelButton.addEventListener("click", openNotificationsPanel);
+dom.closeNotificationsPanelButton.addEventListener("click", closeNotificationsPanel);
+dom.notificationsPanel.addEventListener("click", closeNotificationsPanelOnBackdrop);
+dom.openPomodoroPanelButton.addEventListener("click", openPomodoroPanel);
+dom.closePomodoroPanelButton.addEventListener("click", closePomodoroPanel);
+dom.pomodoroPanel.addEventListener("click", closePomodoroPanelOnBackdrop);
+dom.pomodoroFocusButton.addEventListener("click", () => setPomodoroMode("focus", "Foco por {minutes} minutos. Bora domar a lista."));
+dom.pomodoroShortBreakButton.addEventListener("click", () => setPomodoroMode("short", "Pausa de {minutes} minutos. O foco também respira."));
+dom.pomodoroLongBreakButton.addEventListener("click", () => setPomodoroMode("long", "Pausa longa de {minutes} minutos. Recarregando o cérebro."));
+dom.startPomodoroButton.addEventListener("click", togglePomodoroTimer);
+dom.resetPomodoroButton.addEventListener("click", resetPomodoroTimer);
+dom.togglePomodoroSettingsButton.addEventListener("click", togglePomodoroSettingsPanel);
+dom.pomodoroSoundSelect.addEventListener("change", updatePomodoroSoundSettings);
+dom.pomodoroVolumeInput.addEventListener("input", updatePomodoroSoundSettings);
+dom.previewPomodoroSoundButton.addEventListener("click", previewPomodoroSound);
+[dom.pomodoroFocusMinutesInput, dom.pomodoroShortBreakMinutesInput, dom.pomodoroLongBreakMinutesInput].forEach(input => {
+  input.addEventListener("input", updatePomodoroDurations);
+});
 
 dom.recurrenceEnabledInput.addEventListener("change", toggleRecurrenceOptions);
+dom.recurrenceModeInputs.forEach(input => {
+  input.addEventListener("change", updateRecurrenceMode);
+});
 dom.recurrencePresetButtons.forEach(button => {
   button.addEventListener("click", () => {
     applyRecurrencePreset(button.dataset.weekdayPreset);
   });
 });
 dom.recurrenceEndDateInput.addEventListener("change", updateRecurrenceSummary);
+dom.recurrenceMonthlyDayInput.addEventListener("input", updateRecurrenceSummary);
 dom.recurrenceWeekdayInputs.forEach(input => {
   input.addEventListener("change", () => {
     dom.recurrencePresetButtons.forEach(button => button.classList.remove("active"));
@@ -477,6 +516,8 @@ dom.assistantCommandInput.addEventListener("keydown", event => {
 dom.taskEditPanel.addEventListener("click", closeTaskEditorOnBackdrop);
 dom.closeTaskEditButton.addEventListener("click", closeTaskEditor);
 dom.cancelTaskEditButton.addEventListener("click", closeTaskEditor);
+dom.toggleTaskReminderButton.addEventListener("click", () => toggleTaskExtraField("reminder"));
+dom.toggleTaskLocationButton.addEventListener("click", () => toggleTaskExtraField("location"));
 dom.taskEditForm.addEventListener("submit", event => {
   event.preventDefault();
   saveTaskEdits();
@@ -492,6 +533,12 @@ dom.taskNotesPanel.addEventListener("click", closeTaskNotesOnBackdrop);
 dom.closeTaskNotesButton.addEventListener("click", closeTaskNotes);
 
 dom.taskNotesEditor.addEventListener("input", () => {
+  saveNotesSelection();
+  saveActiveTaskNotes();
+});
+
+dom.taskNotesEditor.addEventListener("change", event => {
+  if (!event.target.matches("input[type='checkbox']")) return;
   saveNotesSelection();
   saveActiveTaskNotes();
 });
@@ -518,6 +565,10 @@ dom.notesFontName.addEventListener("change", event => {
 
 dom.notesFontSize.addEventListener("change", event => {
   formatTaskNote("fontSizePx", event.target.value);
+});
+
+dom.notesLineHeight.addEventListener("change", event => {
+  formatTaskNote("lineHeight", event.target.value);
 });
 
 dom.notesChecklistButton.addEventListener("click", () => {
@@ -697,7 +748,219 @@ document.addEventListener("keydown", event => {
   closeDeleteConfirmation();
   closeTaskEditor();
   closeCalendar();
+  closeNotificationsPanel();
+  closePomodoroPanel();
 });
+
+const POMODORO_MODES = {
+  focus: {
+    button: () => dom.pomodoroFocusButton,
+    input: () => dom.pomodoroFocusMinutesInput,
+    template: "Foco por {minutes} minutos. Bora domar a lista."
+  },
+  short: {
+    button: () => dom.pomodoroShortBreakButton,
+    input: () => dom.pomodoroShortBreakMinutesInput,
+    template: "Pausa de {minutes} minutos. O foco também respira."
+  },
+  long: {
+    button: () => dom.pomodoroLongBreakButton,
+    input: () => dom.pomodoroLongBreakMinutesInput,
+    template: "Pausa longa de {minutes} minutos. Recarregando o cérebro."
+  }
+};
+const DEFAULT_POMODORO_SETTINGS = {
+  focusMinutes: 25,
+  shortBreakMinutes: 5,
+  longBreakMinutes: 15,
+  sound: "pomodoro",
+  volume: 70
+};
+let pomodoroSettings = {
+  ...DEFAULT_POMODORO_SETTINGS,
+  ...loadData("pomodoro-settings", DEFAULT_POMODORO_SETTINGS)
+};
+let activePomodoroMode = "focus";
+let pomodoroTotalSeconds = 25 * 60;
+let pomodoroRemainingSeconds = pomodoroTotalSeconds;
+let pomodoroIntervalId = 0;
+let pomodoroRunning = false;
+
+function clampNumber(value, min, max, fallback = min) {
+  const numeric = Math.round(Number(value));
+  return Math.min(max, Math.max(min, Number.isFinite(numeric) ? numeric : fallback));
+}
+
+function normalizePomodoroSettings(settings) {
+  return {
+    focusMinutes: clampNumber(settings.focusMinutes, 1, 180, DEFAULT_POMODORO_SETTINGS.focusMinutes),
+    shortBreakMinutes: clampNumber(settings.shortBreakMinutes, 1, 60, DEFAULT_POMODORO_SETTINGS.shortBreakMinutes),
+    longBreakMinutes: clampNumber(settings.longBreakMinutes, 1, 120, DEFAULT_POMODORO_SETTINGS.longBreakMinutes),
+    sound: ["pomodoro", "focus-pop", "soft-bell", "double-tap", "rise", "calm"].includes(settings.sound)
+      ? settings.sound
+      : DEFAULT_POMODORO_SETTINGS.sound,
+    volume: clampNumber(settings.volume, 0, 100, DEFAULT_POMODORO_SETTINGS.volume)
+  };
+}
+
+function savePomodoroSettings() {
+  pomodoroSettings = normalizePomodoroSettings({
+    focusMinutes: dom.pomodoroFocusMinutesInput.value,
+    shortBreakMinutes: dom.pomodoroShortBreakMinutesInput.value,
+    longBreakMinutes: dom.pomodoroLongBreakMinutesInput.value,
+    sound: dom.pomodoroSoundSelect.value,
+    volume: dom.pomodoroVolumeInput.value
+  });
+
+  saveData("pomodoro-settings", pomodoroSettings);
+}
+
+function loadPomodoroSettingsControls() {
+  pomodoroSettings = normalizePomodoroSettings(pomodoroSettings);
+  dom.pomodoroFocusMinutesInput.value = String(pomodoroSettings.focusMinutes);
+  dom.pomodoroShortBreakMinutesInput.value = String(pomodoroSettings.shortBreakMinutes);
+  dom.pomodoroLongBreakMinutesInput.value = String(pomodoroSettings.longBreakMinutes);
+  dom.pomodoroSoundSelect.value = pomodoroSettings.sound;
+  dom.pomodoroVolumeInput.value = String(pomodoroSettings.volume);
+}
+
+function formatPomodoroTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+}
+
+function renderPomodoroTimer() {
+  dom.pomodoroTimer.textContent = formatPomodoroTime(pomodoroRemainingSeconds);
+  dom.startPomodoroButton.textContent = pomodoroRunning ? "Pausar" : "Iniciar";
+  [
+    dom.pomodoroFocusMinutesInput,
+    dom.pomodoroShortBreakMinutesInput,
+    dom.pomodoroLongBreakMinutesInput
+  ]
+    .forEach(input => {
+      input.disabled = pomodoroRunning;
+    });
+  dom.togglePomodoroSettingsButton.disabled = pomodoroRunning;
+}
+
+function openPomodoroPanel() {
+  loadPomodoroSettingsControls();
+  setPomodoroMode(activePomodoroMode);
+  renderPomodoroTimer();
+  dom.pomodoroPanel.classList.add("open");
+  dom.pomodoroPanel.setAttribute("aria-hidden", "false");
+}
+
+function closePomodoroPanel() {
+  dom.pomodoroPanel.classList.remove("open");
+  dom.pomodoroPanel.setAttribute("aria-hidden", "true");
+}
+
+function closePomodoroPanelOnBackdrop(event) {
+  if (event.target === event.currentTarget) closePomodoroPanel();
+}
+
+function getPomodoroMinutes(mode = activePomodoroMode) {
+  const input = POMODORO_MODES[mode].input();
+  const min = Number(input.min || 1);
+  const max = Number(input.max || 180);
+  return clampNumber(input.value, min, max, min);
+}
+
+function setPomodoroMode(mode, statusTemplate = POMODORO_MODES[mode].template) {
+  if (pomodoroRunning) return;
+
+  activePomodoroMode = mode;
+  const minutes = getPomodoroMinutes(mode);
+  stopPomodoroTimer();
+  pomodoroTotalSeconds = minutes * 60;
+  pomodoroRemainingSeconds = pomodoroTotalSeconds;
+  dom.pomodoroStatusText.textContent = statusTemplate.replace("{minutes}", String(minutes));
+  Object.entries(POMODORO_MODES)
+    .forEach(([key, config]) => config.button().classList.toggle("active", key === mode));
+  renderPomodoroTimer();
+}
+
+function updatePomodoroDurations(event) {
+  const input = event.target;
+  input.value = String(clampNumber(input.value, Number(input.min), Number(input.max), Number(input.min)));
+  savePomodoroSettings();
+
+  if (pomodoroRunning) return;
+  setPomodoroMode(activePomodoroMode);
+}
+
+function updatePomodoroSoundSettings() {
+  savePomodoroSettings();
+}
+
+function previewPomodoroSound() {
+  savePomodoroSettings();
+  playAlertSound(pomodoroSettings.sound, pomodoroSettings.volume / 100);
+}
+
+function togglePomodoroSettingsPanel() {
+  if (pomodoroRunning) return;
+
+  const willOpen = dom.pomodoroSettingsPanel.hidden;
+  dom.pomodoroSettingsPanel.hidden = !willOpen;
+  dom.togglePomodoroSettingsButton.classList.toggle("active", willOpen);
+  dom.togglePomodoroSettingsButton.setAttribute("aria-expanded", String(willOpen));
+}
+
+function stopPomodoroTimer() {
+  window.clearInterval(pomodoroIntervalId);
+  pomodoroIntervalId = 0;
+  pomodoroRunning = false;
+}
+
+function togglePomodoroTimer() {
+  if (pomodoroRunning) {
+    stopPomodoroTimer();
+    renderPomodoroTimer();
+    return;
+  }
+
+  pomodoroRunning = true;
+  renderPomodoroTimer();
+  pomodoroIntervalId = window.setInterval(() => {
+    pomodoroRemainingSeconds = Math.max(0, pomodoroRemainingSeconds - 1);
+    renderPomodoroTimer();
+
+    if (pomodoroRemainingSeconds > 0) return;
+
+    stopPomodoroTimer();
+    dom.pomodoroStatusText.textContent = "Tempo concluído. Pode riscar essa vitória mental.";
+    notifyPomodoroDone();
+    renderPomodoroTimer();
+  }, 1000);
+}
+
+function resetPomodoroTimer() {
+  stopPomodoroTimer();
+  pomodoroRemainingSeconds = pomodoroTotalSeconds;
+  renderPomodoroTimer();
+}
+
+function notifyPomodoroDone() {
+  alertUser({
+    title: "Pomodoro concluído",
+    message: "Tempo finalizado. Bora decidir: pausa ou próxima missão?",
+    type: "pomodoro",
+    sound: pomodoroSettings.sound,
+    volume: pomodoroSettings.volume / 100,
+    actionLabel: "Abrir",
+    onAction: openPomodoroPanel
+  });
+
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  new Notification("Boby: Pomodoro concluído", {
+    body: "Tempo finalizado. Bora decidir: pausa ou próxima missão?",
+    icon: "/apple-touch-icon-180x180.png",
+    tag: "boby-pomodoro"
+  });
+}
 
 async function reloadDataFromActiveStorage() {
   if (!state.session.isAuthenticated) return;

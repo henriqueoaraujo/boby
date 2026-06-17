@@ -41,6 +41,8 @@ function copySafeStyles(source, target) {
   const fontWeight = source.style.fontWeight;
   const fontStyle = source.style.fontStyle;
   const textDecoration = source.style.textDecoration;
+  const lineHeight = source.style.lineHeight;
+  const textAlign = source.style.textAlign;
 
   if (color && isSafeColor(color)) target.style.color = color;
   if (fontSize && /^\d+(\.\d+)?(px|em|rem|%)$/i.test(fontSize)) {
@@ -57,6 +59,12 @@ function copySafeStyles(source, target) {
   }
   if (textDecoration && /^(none|underline|line-through)(\s+(underline|line-through))*$/i.test(textDecoration)) {
     target.style.textDecoration = textDecoration;
+  }
+  if (lineHeight && /^([1-2](\.\d{1,2})?|normal)$/i.test(lineHeight)) {
+    target.style.lineHeight = lineHeight;
+  }
+  if (textAlign && /^(left|center|right|justify)$/i.test(textAlign)) {
+    target.style.textAlign = textAlign;
   }
 }
 
@@ -82,6 +90,9 @@ function sanitizeNode(node, outputParent) {
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
+    if (node.classList.contains("note-checklist-checkbox")) {
+      checkbox.className = "note-checklist-checkbox";
+    }
     checkbox.checked = node.checked || node.hasAttribute("checked");
     if (checkbox.checked) checkbox.setAttribute("checked", "");
     outputParent.appendChild(checkbox);
@@ -90,7 +101,7 @@ function sanitizeNode(node, outputParent) {
 
   const cleanNode = document.createElement(tagName.toLowerCase());
 
-  if (tagName === "LABEL" && node.classList.contains("note-checklist-item")) {
+  if ((tagName === "DIV" || tagName === "LABEL") && node.classList.contains("note-checklist-item")) {
     cleanNode.className = "note-checklist-item";
   }
 

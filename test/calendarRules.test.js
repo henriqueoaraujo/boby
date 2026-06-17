@@ -41,6 +41,31 @@ test("gera uma tarefa única quando não há recorrência", () => {
   }), ["2026-06-18"]);
 });
 
+test("combina recorrência semanal e mensal sem duplicar datas", () => {
+  assert.deepEqual(generateOccurrenceDates({
+    startDate: "2026-06-01",
+    endDate: "2026-06-12",
+    weekdays: [1],
+    monthlyDay: 8
+  }), [
+    "2026-06-01",
+    "2026-06-08"
+  ]);
+});
+
+test("gera somente recorrência mensal quando nenhum dia da semana foi marcado", () => {
+  assert.deepEqual(generateOccurrenceDates({
+    startDate: "2026-06-01",
+    endDate: "2026-08-31",
+    weekdays: [],
+    monthlyDay: 31
+  }), [
+    "2026-06-30",
+    "2026-07-31",
+    "2026-08-31"
+  ]);
+});
+
 test("carrega somente pendências vencidas para a data alvo", () => {
   const result = carryIncompleteTasks([
     { id: "1", dueDate: "2026-06-13", done: false },

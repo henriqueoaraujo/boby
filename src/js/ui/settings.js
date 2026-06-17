@@ -73,6 +73,7 @@ export function loadPreferencesControls() {
   dom.hideDoneToggle.checked = state.preferences.hideCompleted;
   dom.confirmDeleteToggle.checked = state.preferences.confirmDelete;
   dom.carryIncompleteToggle.checked = state.preferences.carryIncomplete;
+  dom.blockNotificationsToggle.checked = state.preferences.blockNotifications;
 }
 
 export function updatePreference(key, value) {

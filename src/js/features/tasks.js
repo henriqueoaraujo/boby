@@ -19,6 +19,7 @@ import {
 } from "../repositories/tasksRepository.js";
 import { renderCategorySelect } from "./categories.js";
 import { renderWeekCalendar } from "./calendar.js";
+import { renderNotificationsPanel } from "./reminders.js";
 import { t } from "../core/i18n.js";
 
 const CIRCLE_RADIUS = 42;
@@ -49,6 +50,25 @@ function formatDate(dateValue) {
   const [year, month, day] = dateOnly.split("-");
 
   return `${day}/${month}/${year}`;
+}
+
+function formatDateTime(value) {
+  if (!value) return "";
+
+  const [date, time = ""] = value.split("T");
+  return [formatDate(date), time.slice(0, 5)].filter(Boolean).join(" às ");
+}
+
+function moveTaskToEndOfDay(taskId) {
+  const currentIndex = state.tasks.findIndex(task => task.id === taskId);
+  if (currentIndex === -1) return;
+
+  const [task] = state.tasks.splice(currentIndex, 1);
+  const lastSameDayIndex = state.tasks.reduce((lastIndex, savedTask, index) => {
+    return savedTask.dueDate === task.dueDate ? index : lastIndex;
+  }, -1);
+
+  state.tasks.splice(lastSameDayIndex + 1, 0, task);
 }
 
 function getVisibleTasks() {
@@ -130,6 +150,8 @@ export function renderTasks() {
     appendTaskMeta(meta, "task-category", task.category);
     if (task.dueDate) appendTaskMeta(meta, "task-due", formatDate(task.dueDate));
     if (task.dueTime) appendTaskMeta(meta, "task-time", task.dueTime);
+    if (task.reminderAt) appendTaskMeta(meta, "task-reminder", `notificar ${formatDateTime(task.reminderAt)}`);
+    if (task.location) appendTaskMeta(meta, "task-location", task.location);
     if (task.seriesId) appendTaskMeta(meta, "task-series", "recorrente");
     if (task.originalDueDate) {
       appendTaskMeta(
@@ -158,8 +180,11 @@ export function renderTasks() {
       task.completedAt = event.target.checked ? getNowIso() : "";
       task.updatedAt = getNowIso();
 
+      if (task.done) moveTaskToEndOfDay(task.id);
+
       persistLocalTasks();
-      syncTaskToBackend(task);
+      if (task.done) persistTasks();
+      else syncTaskToBackend(task);
       renderTasks();
     });
 
@@ -179,6 +204,7 @@ export function renderTasks() {
   });
 
   updateProgress();
+  renderNotificationsPanel();
 }
 
 function appendTaskMeta(container, className, text) {
@@ -201,6 +227,9 @@ export function addTask() {
   const startDate = dom.dueDateInput.value || state.selectedDueDate;
   const recurrenceEnabled = dom.recurrenceEnabledInput.checked;
   const recurrenceEndDate = dom.recurrenceEndDateInput.value;
+  const monthlyDay = dom.recurrenceMonthlyDayInput.value
+    ? Number(dom.recurrenceMonthlyDayInput.value)
+    : null;
 
   if (recurrenceEnabled && (!recurrenceEndDate || recurrenceEndDate < startDate)) {
     dom.recurrenceSummary.textContent = document.documentElement.lang === "en"
@@ -213,6 +242,17 @@ export function addTask() {
     return;
   }
 
+  if (
+    recurrenceEnabled
+    && dom.recurrenceMonthlyDayInput.value
+    && (!Number.isInteger(monthlyDay) || monthlyDay < 1 || monthlyDay > 31)
+  ) {
+    dom.recurrenceSummary.textContent = "Escolha um dia entre 1 e 31.";
+    dom.recurrenceSummary.dataset.type = "error";
+    dom.recurrenceMonthlyDayInput.focus();
+    return;
+  }
+
   const weekdays = [...dom.recurrenceWeekdayInputs]
     .filter(input => input.checked)
     .map(input => Number(input.value));
@@ -220,7 +260,8 @@ export function addTask() {
     ? generateOccurrenceDates({
         startDate,
         endDate: recurrenceEndDate,
-        weekdays
+        weekdays,
+        monthlyDay
       })
     : [startDate];
 
@@ -243,6 +284,7 @@ export function addTask() {
 
   dom.taskInput.value = "";
   dom.dueTimeInput.value = "";
+  dom.categoryInput.value = state.categories[0] || "Outros";
   dom.priorityInput.value = "normal";
   dom.dueDateInput.value = state.selectedDueDate;
   resetRecurrenceControls();
@@ -266,6 +308,8 @@ function createTask(input) {
     createdAt: getNowIso(),
     updatedAt: getNowIso(),
     notes: "",
+    reminderAt: "",
+    location: "",
     priority: input.priority || "normal",
     seriesId: input.seriesId || "",
     originalDueDate: "",
@@ -383,6 +427,10 @@ export function toggleRecurrenceOptions() {
   updateRecurrenceSummary();
 }
 
+export function updateRecurrenceMode() {
+  updateRecurrenceSummary();
+}
+
 export function applyRecurrencePreset(rawWeekdays) {
   const weekdays = new Set(
     String(rawWeekdays || "")
@@ -412,6 +460,9 @@ export function updateRecurrenceSummary() {
 
   const startDate = dom.dueDateInput.value || state.selectedDueDate;
   const endDate = dom.recurrenceEndDateInput.value;
+  const monthlyDay = dom.recurrenceMonthlyDayInput.value
+    ? Number(dom.recurrenceMonthlyDayInput.value)
+    : null;
   const weekdays = [...dom.recurrenceWeekdayInputs]
     .filter(input => input.checked)
     .map(input => Number(input.value));
@@ -428,7 +479,13 @@ export function updateRecurrenceSummary() {
     return;
   }
 
-  const dates = generateOccurrenceDates({ startDate, endDate, weekdays });
+  if (dom.recurrenceMonthlyDayInput.value && (!Number.isInteger(monthlyDay) || monthlyDay < 1 || monthlyDay > 31)) {
+    dom.recurrenceSummary.textContent = "Escolha um dia do mês entre 1 e 31.";
+    dom.recurrenceSummary.dataset.type = "error";
+    return;
+  }
+
+  const dates = generateOccurrenceDates({ startDate, endDate, weekdays, monthlyDay });
   dom.recurrenceSummary.textContent = dates.length
     ? document.documentElement.lang === "en"
       ? `${dates.length} tasks will be created between ${formatDate(startDate)} and ${formatDate(endDate)}.`
@@ -444,6 +501,8 @@ export function updateRecurrenceSummary() {
 function resetRecurrenceControls() {
   dom.recurrenceEnabledInput.checked = false;
   dom.recurrenceOptions.hidden = true;
+  dom.recurrenceWeeklyPanel.hidden = false;
+  dom.recurrenceMonthlyDayInput.value = "";
   dom.recurrenceEndDateInput.value = "";
   dom.recurrenceStartPreview.value = "";
   dom.recurrenceSummary.textContent = "";
@@ -609,6 +668,10 @@ export function openTaskEditor(taskId) {
   dom.editTaskDate.value = task.dueDate;
   dom.editTaskTime.value = task.dueTime;
   dom.editTaskPriority.value = task.priority || "normal";
+  dom.editTaskReminderAt.value = task.reminderAt || "";
+  dom.editTaskLocation.value = task.location || "";
+  setTaskExtraFieldVisibility("reminder", Boolean(task.reminderAt));
+  setTaskExtraFieldVisibility("location", Boolean(task.location));
   dom.taskSeriesNote.hidden = !task.seriesId;
   dom.taskEditPanel.classList.add("open");
   dom.taskEditPanel.setAttribute("aria-hidden", "false");
@@ -636,6 +699,8 @@ export function saveTaskEdits() {
   task.dueDate = dom.editTaskDate.value;
   task.dueTime = dom.editTaskTime.value;
   task.priority = dom.editTaskPriority.value;
+  task.reminderAt = dom.editTaskReminderAt.value || "";
+  task.location = dom.editTaskLocation.value.trim().replace(/\s+/g, " ").slice(0, 160);
   task.updatedAt = getNowIso();
   state.selectedDueDate = task.dueDate;
 
@@ -645,6 +710,28 @@ export function saveTaskEdits() {
   renderWeekCalendar();
   renderTasks();
   return true;
+}
+
+export function toggleTaskExtraField(type) {
+  const field = type === "location" ? dom.editTaskLocationField : dom.editTaskReminderField;
+  const button = type === "location" ? dom.toggleTaskLocationButton : dom.toggleTaskReminderButton;
+  const willOpen = field.hidden;
+
+  setTaskExtraFieldVisibility(type, willOpen);
+
+  if (willOpen) {
+    const input = type === "location" ? dom.editTaskLocation : dom.editTaskReminderAt;
+    setTimeout(() => input.focus(), 80);
+  }
+}
+
+function setTaskExtraFieldVisibility(type, visible) {
+  const field = type === "location" ? dom.editTaskLocationField : dom.editTaskReminderField;
+  const button = type === "location" ? dom.toggleTaskLocationButton : dom.toggleTaskReminderButton;
+
+  field.hidden = !visible;
+  button.classList.toggle("active", visible);
+  button.setAttribute("aria-expanded", String(visible));
 }
 
 export function closeTaskNotesOnBackdrop(event) {
@@ -670,6 +757,12 @@ export function formatTaskNote(command, value = null) {
 
   if (command === "fontSizePx") {
     applyInlineStyleToSelection("fontSize", value);
+    saveActiveTaskNotes();
+    return;
+  }
+
+  if (command === "lineHeight") {
+    applyInlineStyleToSelection("lineHeight", value);
     saveActiveTaskNotes();
     return;
   }
@@ -728,12 +821,13 @@ function exitChecklistToNormalLine(checklistItem) {
 }
 
 function createChecklistItem() {
-  const wrapper = document.createElement("label");
+  const wrapper = document.createElement("div");
   const checkbox = document.createElement("input");
   const text = document.createElement("span");
 
   wrapper.className = "note-checklist-item";
   checkbox.type = "checkbox";
+  checkbox.className = "note-checklist-checkbox";
   text.contentEditable = "true";
   text.dataset.placeholder = "Digite aqui...";
 
@@ -779,6 +873,7 @@ function restoreNotesSelection() {
 }
 
 export function handleNotesEditorKeydown(event) {
+  if (event.key === "Backspace" && removeEmptyChecklistItem(event)) return;
   if (event.key !== "Enter") return;
 
   event.preventDefault();
@@ -799,7 +894,7 @@ export function handleNotesEditorKeydown(event) {
   const checklistItem = anchorElement?.closest?.(".note-checklist-item");
 
   if (checklistItem) {
-    exitChecklistToNormalLine(checklistItem);
+    insertChecklistAfter(checklistItem);
     saveActiveTaskNotes();
     return;
   }
@@ -808,6 +903,47 @@ export function handleNotesEditorKeydown(event) {
   document.execCommand("insertLineBreak");
   saveNotesSelection();
   saveActiveTaskNotes();
+}
+
+function getCurrentChecklistContext() {
+  const selection = window.getSelection();
+
+  if (!selection || selection.rangeCount === 0) return {};
+
+  const anchorNode = selection.anchorNode;
+  const anchorElement = anchorNode?.nodeType === Node.TEXT_NODE
+    ? anchorNode.parentElement
+    : anchorNode;
+  const checklistItem = anchorElement?.closest?.(".note-checklist-item");
+  const textElement = checklistItem?.querySelector("span[contenteditable='true']");
+
+  return { selection, checklistItem, textElement };
+}
+
+function insertChecklistAfter(checklistItem) {
+  const nextChecklistItem = createChecklistItem();
+
+  checklistItem.after(nextChecklistItem);
+  focusChecklistText(nextChecklistItem.querySelector("span"));
+}
+
+function removeEmptyChecklistItem(event) {
+  const { selection, checklistItem, textElement } = getCurrentChecklistContext();
+
+  if (!selection || !checklistItem || !textElement || !selection.isCollapsed) return false;
+
+  const textIsEmpty = (textElement.textContent || "").replace(/\u200b/g, "").trim() === "";
+  const atStart = selection.anchorNode === textElement
+    ? selection.anchorOffset === 0
+    : selection.anchorNode === textElement.firstChild && selection.anchorOffset === 0;
+
+  if (!textIsEmpty || !atStart) return false;
+
+  event.preventDefault();
+  exitChecklistToNormalLine(checklistItem);
+  checklistItem.remove();
+  saveActiveTaskNotes();
+  return true;
 }
 
 function applyInlineStyleToSelection(styleName, value) {
