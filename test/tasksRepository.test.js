@@ -23,7 +23,10 @@ globalThis.CustomEvent = class {
   }
 };
 
-const { mergeTaskSnapshots } = await import("../src/js/repositories/tasksRepository.js");
+const {
+  getMissingTaskColumn,
+  mergeTaskSnapshots
+} = await import("../src/js/repositories/tasksRepository.js");
 
 test.beforeEach(() => memory.clear());
 
@@ -87,4 +90,11 @@ test("aplica exclusao pendente antes de renderizar tarefas carregadas", () => {
   }]);
 
   assert.deepEqual(result, []);
+});
+
+test("identifica coluna opcional ausente no schema cache do Supabase", () => {
+  assert.equal(getMissingTaskColumn({
+    code: "PGRST204",
+    message: "Could not find the 'location' column of 'tasks' in the schema cache"
+  }), "location");
 });

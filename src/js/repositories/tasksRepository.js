@@ -17,6 +17,16 @@ import {
 import { DEFAULT_TASKS, normalizeTask, state } from "../core/state.js";
 import { getSupabaseClient } from "./supabaseClient.js";
 
+const OPTIONAL_TASK_COLUMNS = new Set([
+  "reminder_at",
+  "location",
+  "series_id",
+  "original_due_date",
+  "carried_at"
+]);
+const missingTaskColumns = new Set();
+const warnedMissingTaskColumns = new Set();
+
 function getTasksStorageKey(userId = state.session.user?.id) {
   const scope = userId ? `user:${userId}` : "local";
   return getScopedDataKey(scope, "tasks");
@@ -96,8 +106,18 @@ function mapSupabaseTask(row, index) {
   }, state.categories, index);
 }
 
-function toSupabaseTask(task) {
-  return {
+export function getMissingTaskColumn(error) {
+  if (error?.code !== "PGRST204") return "";
+
+  const match = String(error.message || "")
+    .match(/Could not find the '([^']+)' column of 'tasks'/i);
+  const column = match?.[1] || "";
+
+  return OPTIONAL_TASK_COLUMNS.has(column) ? column : "";
+}
+
+export function toSupabaseTask(task) {
+  const payload = {
     id: task.id,
     user_id: state.session.user?.id,
     title: task.title,
@@ -117,10 +137,20 @@ function toSupabaseTask(task) {
     done: task.done,
     position: task.position
   };
+
+  missingTaskColumns.forEach(column => {
+    delete payload[column];
+  });
+
+  return payload;
 }
 
 function getSyncErrorMessage(error) {
-  if (error?.code === "PGRST205" || error?.message?.includes("schema cache")) {
+  const missingColumn = getMissingTaskColumn(error);
+  if (missingColumn) {
+    return `A coluna ${missingColumn} ainda não existe na tabela tasks. Execute supabase/migrations/v57.sql.`;
+  }
+  if (error?.code === "PGRST205") {
     return "A tabela tasks não existe no Supabase. Execute supabase/schema.sql.";
   }
   if (error?.code === "42501") {
@@ -189,6 +219,28 @@ export async function loadTasks() {
   return state.tasks;
 }
 
+async function upsertTaskWithSchemaFallback(supabase, task) {
+  const result = await supabase
+    .from("tasks")
+    .upsert(toSupabaseTask(task), { onConflict: "id" });
+
+  const missingColumn = getMissingTaskColumn(result.error);
+  if (!missingColumn) return result;
+
+  missingTaskColumns.add(missingColumn);
+
+  if (!warnedMissingTaskColumns.has(missingColumn)) {
+    warnedMissingTaskColumns.add(missingColumn);
+    console.warn(
+      `Supabase sem a coluna tasks.${missingColumn}. Salvando campos compatíveis até aplicar supabase/migrations/v57.sql.`
+    );
+  }
+
+  return supabase
+    .from("tasks")
+    .upsert(toSupabaseTask(task), { onConflict: "id" });
+}
+
 export async function syncTaskToBackend(task) {
   if (!state.session.isAuthenticated) return { ok: true, mode: "local" };
   const userId = state.session.user.id;
@@ -208,9 +260,7 @@ export async function syncTaskToBackend(task) {
   if (!supabase) return { ok: false, mode: "local" };
 
   announceSyncStatus("syncing");
-  const { error } = await supabase
-    .from("tasks")
-    .upsert(toSupabaseTask(task), { onConflict: "id" });
+  const { error } = await upsertTaskWithSchemaFallback(supabase, task);
 
   if (error) {
     console.warn("Erro ao sincronizar tarefa no Supabase.", error);
