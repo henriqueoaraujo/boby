@@ -30,6 +30,22 @@ function mapSupabaseCategory(row) {
   return row.name;
 }
 
+export function mergeCategorySnapshots(remoteCategories, cachedCategories, pendingOperation = null) {
+  if (pendingOperation?.payload?.length) {
+    return normalizeCategories(pendingOperation.payload);
+  }
+
+  const normalizedRemote = normalizeCategories(remoteCategories);
+  const normalizedCached = normalizeCategories(cachedCategories);
+  const remoteHasRealData = Array.isArray(remoteCategories) && remoteCategories.length > 0;
+  const cachedHasRealData = Array.isArray(cachedCategories) && cachedCategories.length > 0;
+
+  if (remoteHasRealData) return normalizedRemote;
+  if (cachedHasRealData) return normalizedCached;
+
+  return [...DEFAULT_CATEGORIES];
+}
+
 function getSyncErrorMessage(error) {
   if (error?.code === "PGRST205" || error?.message?.includes("schema cache")) {
     return "A tabela categories não existe no Supabase. Execute supabase/schema.sql.";
@@ -90,26 +106,17 @@ export async function loadCategories() {
   }
 
   const remoteCategories = data.map(mapSupabaseCategory);
+  const cachedCategories = loadData(getCategoriesStorageKey(), []);
   const pendingCategories = readSyncQueue(state.session.user.id)
     .find(item => item.resource === "categories" && item.action === "replace");
 
-  if (pendingCategories?.payload?.length) {
-    state.categories = normalizeCategories(pendingCategories.payload);
-    state.draftCategories = [...state.categories];
-    persistLocalCategories();
-    return state.categories;
-  }
-
-  if (!remoteCategories.length) {
-    state.categories = [...DEFAULT_CATEGORIES];
-    state.draftCategories = [...state.categories];
-    await persistCategories();
-    return state.categories;
-  }
-
-  state.categories = remoteCategories;
+  state.categories = mergeCategorySnapshots(remoteCategories, cachedCategories, pendingCategories);
   state.draftCategories = [...state.categories];
   persistLocalCategories();
+
+  if (!remoteCategories.length) {
+    await persistCategories();
+  }
 
   return state.categories;
 }

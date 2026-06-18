@@ -28,6 +28,10 @@ const {
   mergeTaskSnapshots
 } = await import("../src/js/repositories/tasksRepository.js");
 
+const {
+  mergeCategorySnapshots
+} = await import("../src/js/repositories/categoriesRepository.js");
+
 test.beforeEach(() => memory.clear());
 
 test("preserva tarefa local mais recente ao mesclar com dados remotos antigos", () => {
@@ -97,4 +101,20 @@ test("identifica coluna opcional ausente no schema cache do Supabase", () => {
     code: "PGRST204",
     message: "Could not find the 'location' column of 'tasks' in the schema cache"
   }), "location");
+});
+
+test("preserva categorias locais quando Supabase ainda nao tem categorias", () => {
+  const result = mergeCategorySnapshots([], ["Clientes", "Financeiro"], null);
+
+  assert.deepEqual(result, ["Clientes", "Financeiro"]);
+});
+
+test("usa categorias pendentes antes de dados remotos ou cache local", () => {
+  const result = mergeCategorySnapshots(["Trabalho"], ["Clientes"], {
+    resource: "categories",
+    action: "replace",
+    payload: ["Projetos", "Casa"]
+  });
+
+  assert.deepEqual(result, ["Projetos", "Casa"]);
 });
